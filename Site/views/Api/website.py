@@ -10,8 +10,10 @@ from Site.models.comment import Comments
 
 #TODO only POST
 
-@app.route("/api/subcomment/<int:comment_id>/<int:to_user_id>" + \
-    "/<string:text>/")
+#TODO crare form su view
+@app.route(
+    "/api/subcomment/<int:comment_id>/<int:to_user_id>/<string:text>/",
+    methods=["POST"])
 def create_subcomment(comment_id:int, to_user_id:int, text:str):
     new_comment = Subcomments(
         user_id=current_user.id,
@@ -25,7 +27,7 @@ def create_subcomment(comment_id:int, to_user_id:int, text:str):
     
     return ""
 
-@app.route("/api/comment/delete/<int:comment_id>/")
+@app.route("/api/comment/delete/<int:comment_id>/", methods=["POST"])
 def delete_comment(comment_id:int): 
     comment = Comments.query.get_or_404(comment_id)
     #TODO only admin or user
@@ -44,7 +46,7 @@ def delete_comment(comment_id:int):
 
     return ""
 
-@app.route("/api/subcomment/delete/<int:comment_id>/")
+@app.route("/api/subcomment/delete/<int:comment_id>/", methods=["POST"])
 def delete_subcomment(comment_id:int): 
     comment = Subcomments.query.get_or_404(comment_id)
     #TODO only admin or user
@@ -59,7 +61,7 @@ def delete_subcomment(comment_id:int):
     
     return ""
 
-@app.route("/api/upvote/comment/<int:comment_id>/")
+@app.route("/api/upvote/comment/<int:comment_id>/", methods=["POST"])
 def add_cmtupvote(comment_id):
     print("Creazione upvote commento")
     comment = Comments.query.get_or_404(comment_id)
@@ -75,7 +77,7 @@ def add_cmtupvote(comment_id):
     
     return ""
 
-@app.route("/api/upvote/subcomment/<int:comment_id>/")
+@app.route("/api/upvote/subcomment/<int:comment_id>/", methods=["POST"])
 def add_subupvote(comment_id):
     comment = Subcomments.query.get_or_404(comment_id)
     vote = comment.check_upvote(current_user.id)

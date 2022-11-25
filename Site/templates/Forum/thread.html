@@ -7,48 +7,53 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
 <hr>
 
 {% if current_user.is_authenticated %}
-{% if thread.user_id == current_user.id %}
-    <a href="{{ url_for('forumEditThread', thread_slug=thread.slug) }}">edit</a>
-    <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}">delete</a>
-    {% if not thread.closed %}
+    <!-- staffer -->
+    {% if thread.closed and current_user.check_perm('open thread') %}
+        <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}">open</a>
+    {% elif not thread.closed and current_user.check_perm('open thread') %}
     <a href="{{ url_for('forumCloseThread', thread_id=thread.id) }}">close</a>
-    {% else %}
-    <!-- TODO SOLO UNO STAFFER (DA MODIFICARE, NO UTENTE) -->
-    <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}">open</a>
     {% endif %}
-{% endif %}
-{% if not thread.closed %}
-<form method="POST" novalidate>
-    {{ form.hidden_tag() }}
-    <div>
+    <!-- author -->
+    {% if thread.user_id == current_user.id %}
+        <a href="{{ url_for('forumEditThread', thread_slug=thread.slug) }}">edit</a>
+        <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}">delete</a>
+        {% if not thread.closed %}
+        <a href="{{ url_for('forumCloseThread', thread_id=thread.id) }}">close</a>
+        {% endif %}
+    {% endif %}
+    <!-- comments -->
+    {% if not thread.closed %}
+    <form method="POST" novalidate>
+        {{ form_comment.hidden_tag() }}
         <div>
             <div>
-            {{ form.text.label }}
-            {{ form.text(type="text", placeholder="Text") }}
-    
-            {% if form.text.errors %}
-                {% for error in form.text.errors %}
-                <span>{{ error }}</span><br>
-                {% endfor %}
-            {% endif %}
-            </div>
+                <div>
+                {{ form_comment.text.label }}
+                {{ form_comment.text(type="text", placeholder="Text") }}
+        
+                {% if form_comment.text.errors %}
+                    {% for error in form_comment.text.errors %}
+                    <span>{{ error }}</span><br>
+                    {% endfor %}
+                {% endif %}
+                </div>
+                <div>
+                {{ form_comment.submit(class="btn btn-warning") }}
+                </div>  
+            </div >
+            <br><br>
             <div>
-            {{ form.submit(class="btn btn-warning") }}
-            </div>  
-        </div >
-        <br><br>
-        <div>
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                <span>{{ message }}</span><br>
-                {% endfor %}
-            {% endif %}
-            {% endwith %}
-        </div> 
-    </div>
-</form>
-{% endif %}
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                    <span>{{ message }}</span><br>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div> 
+        </div>
+    </form>
+    {% endif %}
 {% endif %}
 
 {% for comment in comments %}
@@ -61,39 +66,74 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
         <div></div>
         <!-- TEST -->
         <!-- TODO: solo se non è il suo commento -->
-        <a href="{{ url_for('add_cmtupvote', comment_id=comment.id) }}">
-            upvote
-        </a>
+        {% if current_user.is_authenticated and not thread.closed  %}
+            <!-- subcomment  -->
+            <form method="POST" novalidate>
+                {{ form_comment.hidden_tag() }}
+                <div>
+                    <div>
+                        <div>
+                        {{ form_subcomment.text.label }}
+                        {{ form_subcomment.text(type="text", placeholder="Text") }}
 
-        <a href="{{ url_for('create_subcomment', comment_id=comment.id, to_user_id=comment.user_id, text='test sucomment') }}">
-            test reply
-        </a>
+                        {{ form_subcomment.comment_id(value=comment.id) }}
+                        {{ form_subcomment.to_user_id(value=comment.user.id) }}
+                
+                        {% if form_subcomment.text.errors %}
+                            {% for error in form_subcomment.text.errors %}
+                            <span>{{ error }}</span><br>
+                            {% endfor %}
+                        {% endif %}
+                        </div>
+                        <div>
+                        {{ form_subcomment.submit(class="btn btn-warning") }}
+                        </div>  
+                    </div >
+                    <br><br>
+                    <div>
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                            <span>{{ message }}</span><br>
+                            {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+                    </div> 
+                </div>
+            </form>
+            
+            <a href="{{ url_for('add_cmtupvote', comment_id=comment.id) }}">
+                upvote
+            </a>
 
-        <a href="{{ url_for('delete_comment', comment_id=comment.id) }}">
-            delete
-        </a>
-        <!-- END-TEST -->
-        
-        ID: {{ comment.id }}
-        {% for respose in comment.subcomments %}
-            {% set sub_user = respose.user %}
-            {% if sub_user %}
-                {{ respose.crate_at }} <br>
-                {{ sub_user.username }} RANK: {{ sub_user.rank }} <br>
-                {{ respose.get_tag()[0] }} {{ respose.text }} vote: {{ respose.upvote_num }}<br>
-                <!-- TODO: solo se non è il suo commento -->
-                <a href="{{ url_for('add_subupvote', comment_id=respose.id) }}">
-                    upvote
-                </a>
-                <a href="{{ url_for('create_subcomment', comment_id=comment.id, to_user_id=respose.user_id, text='test sucomment') }}">
-                    test reply
-                </a>
-                <a href="{{ url_for('delete_subcomment', comment_id=respose.id) }}">
+            {% if current_user.check_perm('delete thread') or current_user == comment.user %}
+                <a href="{{ url_for('delete_comment', comment_id=comment.id) }}">
                     delete
                 </a>
+                <!-- END-TEST -->
+                
+                ID: {{ comment.id }}
+                {% for respose in comment.subcomments %}
+                    {% set sub_user = respose.user %}
+                    {% if sub_user %}
+                        {{ respose.crate_at }} <br>
+                        {{ sub_user.username }} RANK: {{ sub_user.rank }} <br>
+                        TEXT:  <a href="{{ respose.user.profile_link }}">{{ respose.user.get_tag }}</a> {{ respose.text }} vote: {{ respose.upvote_num }}<br>
+                        <!-- TODO: solo se non è il suo commento -->
+                        <a href="{{ url_for('add_subupvote', comment_id=respose.id) }}">
+                            upvote
+                        </a>
+                        <a href="{{ url_for('create_subcomment', comment_id=comment.id, to_user_id=respose.user_id, text='test sucomment') }}">
+                            test reply
+                        </a>
+                        <a href="{{ url_for('delete_subcomment', comment_id=respose.id) }}">
+                            delete
+                        </a>
+                        <br>
+                    {% endif %}
+                {% endfor %}
                 <br>
             {% endif %}
-        {% endfor %}
-        <br>
+        {% endif %}
     {% endif %}
 {% endfor %}

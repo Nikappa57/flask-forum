@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 
-from wtforms import (validators, BooleanField, StringField, 
+from wtforms import (validators, BooleanField, StringField, HiddenField,
     SubmitField, TextAreaField, SelectField, IntegerField)
 
 from Site.models.rank import Rank
@@ -71,3 +71,14 @@ class CommentsForm(FlaskForm):
 
     submit = SubmitField('Confirm')
 
+class SubCommentsForm(FlaskForm):
+    text = TextAreaField('Text', validators=[
+        validators.InputRequired(Error.required),
+        validators.Length(min=2, max=1024, message=
+            Error.length.format(name='text', min=2, max=1024))])
+    comment_id = HiddenField('Comment Id', validators=[
+        validators.InputRequired(Error.required)])
+    to_user_id = HiddenField('To User Id', validators=[
+        validators.InputRequired(Error.required)])
+
+    submit = SubmitField('Confirm')

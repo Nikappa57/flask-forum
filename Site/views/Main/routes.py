@@ -16,19 +16,16 @@ def homepage():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('homepage'))
-    
-    form = LoginForm()
 
+    form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
 
         if user is None or not user.check_password(form.password.data):
             flash(Error.passw_error, Error.name)
-
             return redirect(url_for('login'))
-
+        
         login_user(user, remember=str(form.remember_me.data))
-
         return "userpanel" #TODO
     
     return render_template('login-manager/login.html', form=form)
@@ -55,6 +52,7 @@ def register():
             email=form.email.data
         )
         new_user.set_password_hash()
+        new_user.set_rank('user')
 
         try:
             db.session.add(new_user)

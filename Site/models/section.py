@@ -13,7 +13,7 @@ class Section(db.Model):
     position = db.Column(db.Integer, nullable=False)
     priority_required = db.Column(db.Integer, default=0)
     priority_required_create = db.Column(db.Integer, default=0)
-    slug = db.Column(db.String(250))
+    slug = db.Column(db.String(250), unique=True)
 
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     threads = db.relationship('Threads', backref='threads')

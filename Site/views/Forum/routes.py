@@ -11,11 +11,12 @@ from Site.models.section import Section
 from Site.models.category import Category
 from Site.models.threads import Threads
 from Site.models.comment import Comments
+from Site.models.subcomment import Subcomments
 from Site.views.Forum.src import changePosition
 from Site.views.Forum.src.messages import Error, Success
 from Site.views.Forum.src.saveFile import saveFile
 from Site.views.Forum.src.forms import (ThreadForm, CommentsForm, 
-    SectionForm, CategoryForm)
+    SectionForm, CategoryForm, SubCommentsForm)
 
 
 ### HOMEPAGE ###
@@ -109,7 +110,7 @@ def forumCategoryDelete(category_id:int):
 
 
 ### SECTION ###
-@app.route("/forum/section/<string:section_slug>")
+@app.route("/forum/<string:section_slug>")
 def forumSection(section_slug:str):
     page_number = request.args.get('page', 1, type=int)
 
@@ -135,11 +136,11 @@ def forumSection(section_slug:str):
     }
 
     return render_template("Forum/section.html", threads=threads, 
-        pinned_threads=pinned_threads, section_slug=section_slug,
+        pinned_threads=pinned_threads, section=section,
         page=loadjson(page))
 
 
-@app.route("/forum/section/<int:category_id>/create", methods=["GET", "POST"])
+@app.route("/forum/category/<int:category_id>/create", methods=["GET", "POST"])
 @login_required
 @check_priority('create section')
 def forumSectionCreate(category_id:int):
@@ -178,7 +179,7 @@ def forumSectionCreate(category_id:int):
     return render_template('Forum/create_section.html', form=form)
 
 
-@app.route("/forum/section/<string:section_slug>/edit", methods=["GET", "POST"])
+@app.route("/forum/<string:section_slug>/edit", methods=["GET", "POST"])
 @login_required
 @check_priority('edit section')
 def forumSectionEdit(section_slug:str):
@@ -215,7 +216,7 @@ def forumSectionEdit(section_slug:str):
     return render_template('Forum/create_section.html', form=form)
 
 
-@app.route("/forum/section/<string:section_slug>/delete")
+@app.route("/forum/<string:section_slug>/delete")
 @login_required
 @check_priority('delete section')
 def forumSectionDelete(section_slug:str):
@@ -243,22 +244,38 @@ def forumSectionDelete(section_slug:str):
 def forumThread(thread_slug:str):
     thread = Threads.query.filter_by(slug=thread_slug).first_or_404()
     user = Users.query.get_or_404(thread.user_id)
-    form = CommentsForm()
+    form_comment = CommentsForm()
+    form_subcomment = SubCommentsForm()
 
-    thread.add_view(user_id=current_user.id)
+    if current_user.is_authenticated:
+        thread.add_view(user_id=current_user.id)
 
-    if form.validate_on_submit() and not thread.closed:
+    if form_comment.validate_on_submit() and not thread.closed:
         new_comment = Comments(
-            text=form.text.data,
+            text=form_comment.text.data,
             user_id=current_user.id,
-            thread_id=thread.id)
+            thread_id=thread.id
+        )
 
         db.session.add(new_comment)
         db.session.commit()
         return redirect(url_for('forumThread', thread_slug=thread.slug))
+    
+    elif form_subcomment.validate_on_submit() and not thread.closed:
+        new_subcomment = Subcomments(
+            text=form_subcomment.text.data,
+            user_id=current_user.id,
+            to_user_id=form_subcomment.to_user_id.data,
+            comment_id=form_subcomment.comment_id.data
+        )
+
+        db.session.add(new_subcomment)
+        db.session.commit()
+        return redirect(url_for('forumThread', thread_slug=thread.slug))
         
     return render_template("Forum/thread.html", thread=thread, 
-        comments=thread.comments, form=form, user=user, Users=Users)
+        comments=thread.comments, form_comment=form_comment, 
+            form_subcomment=form_subcomment, user=user, Users=Users)
 
 
 @app.route("/forum/thread/<string:section_slug>/create", methods=["GET", "POST"])
@@ -341,12 +358,12 @@ def forumEditThread(thread_slug:str):
 
 @app.route("/forum/thread/<int:thread_id>/delete")
 @login_required
-@check_priority('delete thread')
 def forumDeleteThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
     section_id = thread.section_id
 
-    if thread.user_id == current_user.id:
+    if thread.user_id == current_user.id or \
+            current_user.check_perm('delete thread'):
         db.session.delete(thread)
         db.session.commit()
     
@@ -355,12 +372,11 @@ def forumDeleteThread(thread_id:int):
 
 @app.route("/forum/thread/<int:thread_id>/close")
 @login_required
-@check_priority('delete thread')
 def forumCloseThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
-    section_id = thread.section_id
 
-    if thread.user_id == current_user.id:
+    if thread.user_id == current_user.id or \
+            current_user.check_perm('delete thread'):
         thread.closed = True
         db.session.commit()
     
@@ -373,9 +389,8 @@ def forumCloseThread(thread_id:int):
 def forumOpenThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
 
-    if thread.user_id == current_user.id: #TODO: può aprirlo solo uno staffer
-        thread.closed = False
-        db.session.commit()
+    thread.closed = False
+    db.session.commit()
 
     return redirect(url_for('forumThread', thread_slug=thread.slug))
 

@@ -6,6 +6,7 @@ default = {
     'owner': {'priority': 1000, 'tag': 'Owner', 'tag_color': 'danger'},
     'admin': {'priority': 500, 'tag': 'Admin', 'tag_color': 'success'},
     'moderator': {'priority': 300, 'tag': 'Mod', 'tag_color': 'warning'},
+    'user': {'priority': 0, 'tag': 'User', 'tag_color': 'dark'}, # Default rank must have 0 priority
 }
 
 def create_default_ranks() -> None:

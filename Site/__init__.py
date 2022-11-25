@@ -1,3 +1,5 @@
+import sys
+
 from flask import Flask
 
 from flask_login import LoginManager
@@ -43,13 +45,14 @@ from Site.models.cmt_upvote import CmtUpvote
 from Site.models.comment import Comments
 from Site.models.sub_upvote import SubUpvote
 from Site.models.subcomment import Subcomments
-from Site.views.Admin import routes
-from Site.views.Main import routes
-from Site.views.Forum import routes
-from Site.views.Api import website
-from Site.views.Errors import routes
-from Site.views.Other import routes
-from Site.src.permission_default import create_default_permission
-from Site.src.rank_default import create_default_ranks
-create_default_permission()
-create_default_ranks()
+if not "db" in sys.argv[1]:
+    from Site.views.Admin import routes
+    from Site.views.Main import routes
+    from Site.views.Forum import routes
+    from Site.views.Api import website
+    from Site.views.Errors import routes
+    from Site.views.Other import routes
+    from Site.src.permission_default import create_default_permission
+    from Site.src.rank_default import create_default_ranks
+    create_default_permission()
+    create_default_ranks()

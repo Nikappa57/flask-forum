@@ -14,7 +14,7 @@ class Threads(db.Model):
 
     title = db.Column(db.String(60), nullable=False)
     text = db.Column(db.String(1024), nullable=False)
-    slug = db.Column(db.String(250))
+    slug = db.Column(db.String(250), unique=True)
     img = db.Column(db.String(120))
     
     threadViews = db.relationship('ThreadsViews', backref='threadViews')

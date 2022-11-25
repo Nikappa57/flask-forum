@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from flask import url_for
 from flask_login import UserMixin, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -35,6 +36,9 @@ class Users(UserMixin, db.Model):
     def set_password_hash(self) -> None:
         self.password = generate_password_hash(self.password)
 
+    def set_rank(self, rank_name) -> None:
+        self.rank_id = Rank.query.filter_by(name=rank_name).first().id
+
     def check_password(self, password:str) -> bool:
         return check_password_hash(self.password, password)
     
@@ -45,6 +49,14 @@ class Users(UserMixin, db.Model):
     @property
     def rank(self) -> int:
         return Rank.query.get_or_404(self.rank_id).name
+
+    @property
+    def tag(self) -> set:
+        return "@" + self.username
+
+    @property
+    def profile_link(self) -> str:
+        return url_for('profile', username=self.username)
 
     def check_perm(self, action:str) -> int or None:
         limited_fuction = (

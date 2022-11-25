@@ -1,5 +1,6 @@
-<a href="{{ url_for('forumCreateThread', section_slug=section_slug) }}">create</a>
-
+{% if current_user.priority >= section.priority_required_create %}
+    <a href="{{ url_for('forumCreateThread', section_slug=section.slug) }}">create thread</a>
+{% endif %}
 <br><br>
 {% for thread in pinned_threads %}
     <h2>{{ thread.title }} {{ thread.create_at }}</h2> 
