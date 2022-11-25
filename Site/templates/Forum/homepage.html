@@ -1,0 +1,45 @@
+{% if current_user.is_authenticated and current_user.check_perm('create category') %}
+<a href="{{ url_for('forumCategoryCreate') }}">create category</a>
+{% endif %}
+
+<br>
+{% for category in categories %}
+    <p>
+        <h1>{{ category.name }} </h1>
+        {% if current_user.is_authenticated and current_user.check_perm('edit category') %}
+        <a href="{{ url_for('forumCategoryEdit', category_id=category.id) }}">edit</a>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.check_perm('delete category') %}
+        <a href="{{ url_for('forumCategoryDelete', category_id=category.id) }}">delete</a>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.check_perm('create section') %}
+        <a href="{{ url_for('forumSectionCreate', category_id=category.id) }}">add section</a>
+        {% endif %}
+    </p>
+    {% for section in category.sections %}
+        <h3>{{ section.name }}
+        {% if current_user.is_authenticated and current_user.check_perm('edit section') %}
+        <a href="{{ url_for('forumSectionEdit', section_slug=section.slug) }}">edit</a>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.check_perm('delete section') %}
+        <a href="{{ url_for('forumSectionDelete', section_slug=section.slug) }}">delete</a>
+        {% endif %}
+
+        <a href="{{ url_for('forumSection', section_slug=section.slug) }}">link</a></h3>
+        <i>{{ section.desc }}</i> ({{ section.threads|length }} post)
+        
+        {% set last_post = section.last_post  %}
+        {% if last_post %}
+            {% set last_post_user = last_post.user %}
+            <b>Last post: </b> 
+            <a href="{{ url_for('forumThread', thread_slug=last_post.slug) }}"> 
+                {{ last_post.title }} 
+            </a><br> {{ last_post.create_at.strftime('%d/%m/%Y %H:%M:%S') }}
+            {% if last_post_user %} 
+                by {{ last_post_user.username }} 
+            {% endif %}
+        {% endif %}
+            
+        <br>
+    {% endfor %}
+{% endfor %}

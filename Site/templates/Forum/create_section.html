@@ -1,0 +1,76 @@
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <div>
+        <div>
+            <div>
+            {{ form.name.label }}
+            {{ form.name(placeholder="Title") }}
+    
+            {% if form.name.errors %}
+                {% for error in form.name.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+        <div>
+            <div>
+            {{ form.desc.label }}
+            {{ form.desc(placeholder="Description") }}
+    
+            {% if form.desc.errors %}
+                {% for error in form.desc.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+        <div>
+            <div>            
+            {{ form.position.label }}
+            {{ form.position() }}
+
+            {% if form.position.errors %}
+                {% for error in form.position.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+            </div>
+            <div>
+                {{ form.priority_required.label }}
+                {{ form.priority_required() }}
+        
+                {% if form.priority_required.errors %}
+                    {% for error in form.priority_required.errors %}
+                    <span>{{ error }}</span><br>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div>
+                {{ form.priority_require_to_create.label }}
+                {{ form.priority_require_to_create() }}
+        
+                {% if form.priority_require_to_create.errors %}
+                    {% for error in form.priority_require_to_create.errors %}
+                    <span>{{ error }}</span><br>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div>
+            {{ form.submit(class="btn btn-warning") }}
+            </div>  
+        </div>
+
+        <br><br>
+        <div>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <span>{{ message }}</span><br>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div> 
+    </div>
+</form>

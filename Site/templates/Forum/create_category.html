@@ -1,0 +1,44 @@
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <div>
+        <div>
+            <div>
+            {{ form.name.label }}
+            {{ form.name(placeholder="Title") }}
+    
+            {% if form.name.errors %}
+                {% for error in form.name.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+        <div>
+            <div>            
+            {{ form.position.label }}
+            {{ form.position() }}
+
+            {% if form.position.errors %}
+                {% for error in form.position.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+            </div>
+            <div>
+            {{ form.submit(class="btn btn-warning") }}
+            </div>  
+        </div>
+
+        <br><br>
+        <div>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <span>{{ message }}</span><br>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div> 
+    </div>
+</form>

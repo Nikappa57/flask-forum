@@ -1,0 +1,68 @@
+
+<form method="POST" enctype='multipart/form-data' novalidate>
+    {{ form.hidden_tag() }}
+    <div>
+        <div>
+            <div>
+            {{ form.title.label }}
+            {{ form.title(type="text", placeholder="Title") }}
+    
+            {% if form.title.errors %}
+                {% for error in form.title.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+        <div>
+            <div>
+            {{ form.text.label }}
+            {{ form.text(type="text", placeholder="Text") }}
+    
+            {% if form.text.errors %}
+                {% for error in form.text.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+            </div>
+
+            <div>
+                {{ form.img.label }}
+                {{ form.img() }}
+        
+                {% if form.img.errors %}
+                    {% for error in form.img.errors %}
+                    <span>{{ error }}</span><br>
+                    {% endfor %}
+                {% endif %}
+                </div>
+
+            {% if current_user.check_perm('pin thrad') %}
+            <div>
+                {{ form.pinned.label }}
+                {{ form.pinned() }}
+        
+                {% if form.pinned.errors %}
+                    {% for error in form.pinned.errors %}
+                    <span>{{ error }}</span><br>
+                    {% endfor %}
+                {% endif %}
+                </div>
+            <div>
+            {% endif %}
+            {{ form.submit(class="btn btn-warning") }}
+            </div>  
+        </div>
+
+        <br><br>
+        <div>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <span>{{ message }}</span><br>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div> 
+    </div>
+</form>

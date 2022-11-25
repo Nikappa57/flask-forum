@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block style %}<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">{% endblock %}
+
+{% block content %}
+
+
+<section>
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <div>
+      <div>
+        <div>
+          {{ form.email.label }}
+          {{ form.email(type="email",  placeholder="email") }}
+  
+          {% if form.email.errors %}
+            {% for error in form.email.errors %}
+              <span>{{ error }}</span><br>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div>
+          {{ form.username.label }}
+          {{ form.username(type="username",  placeholder="Username") }}
+  
+          {% if form.username.errors %}
+            {% for error in form.username.errors %}
+              <span>{{ error }}</span><br>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div>
+          {{ form.password.label }}
+          {{ form.password(type="password",  placeholder="Password") }}
+  
+          {% if form.password.errors %}
+            {% for error in form.password.errors %}
+              <span>{{ error }}</span><br>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div>
+            {{ form.confirm.label }}
+            {{ form.confirm(type="password", class="form-control", placeholder="Password") }}
+
+            {% if form.confirm.errors %}
+                {% for error in form.confirm.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div>
+          {{ form.submit(class="btn btn-warning") }}
+        </div>  
+      </div >
+      <br><br>
+      <div>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <span>{{ message }}</span><br>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div> 
+      
+    </div>
+  </form>
+</section>
+
+{% endblock %}

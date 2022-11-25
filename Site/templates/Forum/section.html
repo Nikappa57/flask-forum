@@ -1,0 +1,40 @@
+<a href="{{ url_for('forumCreateThread', section_slug=section_slug) }}">create</a>
+
+<br><br>
+{% for thread in pinned_threads %}
+    <h2>{{ thread.title }} {{ thread.create_at }}</h2> 
+    {% set user = thread.user %}
+    {% if user %}
+        <i>by {{ user.username }}</i>
+    {% endif %}
+    <a href="{{ url_for('forumThread', thread_slug=thread.slug) }}">link</a>
+    <br>
+{% endfor %}
+<hr>
+{% for thread in threads.items %}
+    <a href="{{ url_for('forumThread', thread_slug=thread.slug) }}">
+        <b>{{ thread.title }}</b>
+    </a> {{ thread.create_at.strftime('%d/%m/%Y %H:%M:%S') }}
+    {% set user = thread.user %} 
+    {% if user %}
+        <i>by {{ user.username }}</i>
+    {% endif %}
+    Views: {{ thread.views }}
+    Respose: {{ thread.comments|length }}
+    {% if thread.comments %}
+    last respose by: {{ thread.comments[-1].user.username }}
+    {% endif %}
+    
+    <br>
+{% endfor %}
+
+<!-- PAGES -->
+<div>
+    {% if page.prev %}
+    <a href="{{ page.prev }}">Back</a>
+    {% endif %}
+
+    {% if page.next %}
+    <a href="{{ page.next }}">Next</a>
+    {% endif %}
+</div>
