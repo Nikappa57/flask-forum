@@ -24,14 +24,13 @@ class Subcomments(db.Model):
         return len(self.upvote)
     
     @property
-    def user_tag(self) -> set or None:
+    def to_user(self) -> set or None:
         tag_user = Users.query.get(self.to_user_id)
         
         if not tag_user:
             return ""
 
-        user_link = url_for('profile', user_id=tag_user.id)
-        return ("@" + tag_user.username, tag_user) # user_link
+        return tag_user
 
     def check_upvote(self, user_id:int) -> SubUpvote or None:
         for u in self.upvote:

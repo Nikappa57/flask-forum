@@ -13,6 +13,9 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
     {% elif not thread.closed and current_user.check_perm('open thread') %}
     <a href="{{ url_for('forumCloseThread', thread_id=thread.id) }}">close</a>
     {% endif %}
+    {% if current_user.check_perm('delete thread') %}
+    <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}">delete</a>
+    {% endif %}
     <!-- author -->
     {% if thread.user_id == current_user.id %}
         <a href="{{ url_for('forumEditThread', thread_slug=thread.slug) }}">edit</a>
@@ -21,24 +24,24 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
         <a href="{{ url_for('forumCloseThread', thread_id=thread.id) }}">close</a>
         {% endif %}
     {% endif %}
-    <!-- comments -->
+    <!-- create comment -->
     {% if not thread.closed %}
     <form method="POST" novalidate>
         {{ form_comment.hidden_tag() }}
         <div>
             <div>
                 <div>
-                {{ form_comment.text.label }}
-                {{ form_comment.text(type="text", placeholder="Text") }}
+                {{ form_comment.text1.label }}
+                {{ form_comment.text1(type="text", placeholder="Text") }}
         
-                {% if form_comment.text.errors %}
-                    {% for error in form_comment.text.errors %}
+                {% if form_comment.text1.errors %}
+                    {% for error in form_comment.text1.errors %}
                     <span>{{ error }}</span><br>
                     {% endfor %}
                 {% endif %}
                 </div>
                 <div>
-                {{ form_comment.submit(class="btn btn-warning") }}
+                {{ form_comment.submit1(class="btn btn-warning") }}
                 </div>  
             </div >
             <br><br>
@@ -57,83 +60,90 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
 {% endif %}
 
 {% for comment in comments %}
+    <hr>
     {% set user = comment.user %}
     {% if user %}
-        {{ comment.crate_at }} <br>
+        <!-- Comments  -->
+        [COMMENTO]{{ comment.crate_at }} <br>
         by: {{ user.username }} RANK: {{ user.rank }}  <br>
         {{ comment.text }} vote: {{ comment.upvote_num }}<br>
-        
-        <div></div>
-        <!-- TEST -->
-        <!-- TODO: solo se non è il suo commento -->
-        {% if current_user.is_authenticated and not thread.closed  %}
-            <!-- subcomment  -->
-            <form method="POST" novalidate>
-                {{ form_comment.hidden_tag() }}
-                <div>
-                    <div>
-                        <div>
-                        {{ form_subcomment.text.label }}
-                        {{ form_subcomment.text(type="text", placeholder="Text") }}
-
-                        {{ form_subcomment.comment_id(value=comment.id) }}
-                        {{ form_subcomment.to_user_id(value=comment.user.id) }}
-                
-                        {% if form_subcomment.text.errors %}
-                            {% for error in form_subcomment.text.errors %}
-                            <span>{{ error }}</span><br>
-                            {% endfor %}
-                        {% endif %}
-                        </div>
-                        <div>
-                        {{ form_subcomment.submit(class="btn btn-warning") }}
-                        </div>  
-                    </div >
-                    <br><br>
-                    <div>
-                        {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            {% for message in messages %}
-                            <span>{{ message }}</span><br>
-                            {% endfor %}
-                        {% endif %}
-                        {% endwith %}
-                    </div> 
-                </div>
-            </form>
-            
+        <!-- comment action -->
+        {% if current_user.is_authenticated and not thread.closed %}
             <a href="{{ url_for('add_cmtupvote', comment_id=comment.id) }}">
                 upvote
             </a>
-
             {% if current_user.check_perm('delete thread') or current_user == comment.user %}
                 <a href="{{ url_for('delete_comment', comment_id=comment.id) }}">
                     delete
                 </a>
-                <!-- END-TEST -->
-                
-                ID: {{ comment.id }}
-                {% for respose in comment.subcomments %}
-                    {% set sub_user = respose.user %}
-                    {% if sub_user %}
-                        {{ respose.crate_at }} <br>
-                        {{ sub_user.username }} RANK: {{ sub_user.rank }} <br>
-                        TEXT:  <a href="{{ respose.user.profile_link }}">{{ respose.user.get_tag }}</a> {{ respose.text }} vote: {{ respose.upvote_num }}<br>
-                        <!-- TODO: solo se non è il suo commento -->
-                        <a href="{{ url_for('add_subupvote', comment_id=respose.id) }}">
-                            upvote
-                        </a>
-                        <a href="{{ url_for('create_subcomment', comment_id=comment.id, to_user_id=respose.user_id, text='test sucomment') }}">
-                            test reply
-                        </a>
-                        <a href="{{ url_for('delete_subcomment', comment_id=respose.id) }}">
-                            delete
-                        </a>
-                        <br>
+            {% endif%}
+        {% endif%}
+        <!-- create subcomments to comment -->
+        <form method="POST" novalidate>
+            {{ form_subcomment.hidden_tag() }}
+            <h4>RISPONDI AL COMMENTO</h4>
+            <div>
+                <div>
+                    {{ form_subcomment.text2.label }}
+                    {{ form_subcomment.text2(type="text", placeholder="Text") }}
+                    {{ form_subcomment.comment_id(value=comment.id, type="hidden") }}
+                    {{ form_subcomment.to_user_id(value=comment.user_id, type="hidden") }}
+            
+                    {% if form_subcomment.text2.errors %}
+                        {% for error in form_subcomment.text2.errors %}
+                        <span>{{ error }}</span><br>
+                        {% endfor %}
                     {% endif %}
-                {% endfor %}
-                <br>
+                    </div>
+                    <div>
+                    {{ form_subcomment.submit2(class="btn btn-warning") }}
+                    </div>  
+                </div>
+            </div> 
+        </form>
+        <!-- subcomments -->
+        {% for respose in comment.subcomments %}
+            {% set sub_user = respose.user %}
+            {% if sub_user %}
+                [SUBCOMMENT] {{ respose.crate_at }} <br>
+                {{ sub_user.username }} RANK: {{ sub_user.rank }} <br>
+                <p>response:  <a href="{{ respose.to_user.profile_link }}">{{ respose.to_user.tag }}</a> {{ respose.text }} vote: {{ respose.upvote_num }}</p>
+                <!-- subcomment action  -->
+                {% if current_user.is_authenticated and not thread.closed %}
+                    <!-- TODO: solo se non è il suo commento -->
+                    <a href="{{ url_for('add_subupvote', comment_id=respose.id) }}">
+                        upvote
+                    </a>
+                    <a href="{{ url_for('delete_subcomment', comment_id=respose.id) }}">
+                        delete
+                    </a>
+                    <br>
+                    <!-- create subcomments to subcomment -->
+                    <form method="POST" novalidate>
+                        {{ form_subcomment.hidden_tag() }}
+                        <h4>RISPONDI AL SUBCOMMENTO</h4>
+                        <div>
+                            <div>
+                                {{ form_subcomment.text2.label }}
+                                {{ form_subcomment.text2(type="text", placeholder="Text") }}
+                                {{ form_subcomment.comment_id(value=comment.id, type="hidden") }}
+                                {{ form_subcomment.to_user_id(value=sub_user.id, type="hidden") }}
+                        
+                                {% if form_subcomment.text2.errors %}
+                                    {% for error in form_subcomment.text2.errors %}
+                                    <span>{{ error }}</span><br>
+                                    {% endfor %}
+                                {% endif %}
+                                </div>
+                                <div>
+                                {{ form_subcomment.submit2(class="btn btn-warning") }}
+                                </div>  
+                            </div>
+                        </div> 
+                    </form>
+                {% endif %}
             {% endif %}
-        {% endif %}
+        {% endfor %}
+        <br>
     {% endif %}
 {% endfor %}

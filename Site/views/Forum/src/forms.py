@@ -64,21 +64,21 @@ class ThreadForm(FlaskForm):
     submit = SubmitField('Confirm')
 
 class CommentsForm(FlaskForm):
-    text = TextAreaField('Text', validators=[
+    text1 = TextAreaField('Text', validators=[
         validators.InputRequired(Error.required),
         validators.Length(min=2, max=1024, message=
             Error.length.format(name='text', min=2, max=1024))])
 
-    submit = SubmitField('Confirm')
+    submit1 = SubmitField('Confirm')
 
 class SubCommentsForm(FlaskForm):
-    text = TextAreaField('Text', validators=[
+    text2 = TextAreaField('Text', validators=[
         validators.InputRequired(Error.required),
         validators.Length(min=2, max=1024, message=
             Error.length.format(name='text', min=2, max=1024))])
-    comment_id = HiddenField('Comment Id', validators=[
+    comment_id = IntegerField('Comment Id', validators=[
         validators.InputRequired(Error.required)])
-    to_user_id = HiddenField('To User Id', validators=[
+    to_user_id = IntegerField('To User Id', validators=[
         validators.InputRequired(Error.required)])
 
-    submit = SubmitField('Confirm')
+    submit2 = SubmitField('Confirm')

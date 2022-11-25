@@ -249,30 +249,38 @@ def forumThread(thread_slug:str):
 
     if current_user.is_authenticated:
         thread.add_view(user_id=current_user.id)
-
-    if form_comment.validate_on_submit() and not thread.closed:
-        new_comment = Comments(
-            text=form_comment.text.data,
-            user_id=current_user.id,
-            thread_id=thread.id
-        )
-
-        db.session.add(new_comment)
-        db.session.commit()
-        return redirect(url_for('forumThread', thread_slug=thread.slug))
     
-    elif form_subcomment.validate_on_submit() and not thread.closed:
-        new_subcomment = Subcomments(
-            text=form_subcomment.text.data,
-            user_id=current_user.id,
-            to_user_id=form_subcomment.to_user_id.data,
-            comment_id=form_subcomment.comment_id.data
-        )
+    if request.method == 'POST':
+        print("POST DATA", request.form)
+        print("FORM Sub", form_subcomment.submit2.data, form_subcomment.validate_on_submit())
+        print("FORM comm", form_comment.submit1.data, form_comment.validate_on_submit())
+        print("FORM sub", form_subcomment.data)
+        print("FORM com", form_comment)
+        if form_subcomment.submit2.data and form_subcomment.validate_on_submit() and not thread.closed:
+            new_subcomment = Subcomments(
+                text=form_subcomment.text2.data,
+                user_id=current_user.id,
+                to_user_id=form_subcomment.to_user_id.data,
+                comment_id=form_subcomment.comment_id.data
+            )
 
-        db.session.add(new_subcomment)
-        db.session.commit()
-        return redirect(url_for('forumThread', thread_slug=thread.slug))
+            db.session.add(new_subcomment)
+            db.session.commit()
+            print("SUBCOMMENT CREATO")
+            return redirect(url_for('forumThread', thread_slug=thread.slug))
         
+        if form_comment.submit1.data and form_comment.validate_on_submit() and not thread.closed:
+            new_comment = Comments(
+                text=form_comment.text1.data,
+                user_id=current_user.id,
+                thread_id=thread.id
+            )
+
+            db.session.add(new_comment)
+            db.session.commit()
+            print("COMMENTO CREATO")
+            return redirect(url_for('forumThread', thread_slug=thread.slug))
+            
     return render_template("Forum/thread.html", thread=thread, 
         comments=thread.comments, form_comment=form_comment, 
             form_subcomment=form_subcomment, user=user, Users=Users)
