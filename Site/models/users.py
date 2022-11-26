@@ -60,7 +60,7 @@ class Users(UserMixin, db.Model):
 
     def check_perm(self, action:str) -> int or None:
         limited_fuction = (
-            'open thread',
+            'create thread',
             'create comment'
         )
 

@@ -1,3 +1,8 @@
+{% extends 'base.html' %}
+
+{% block title%}Create Section{% endblock %}
+
+{% block content %}
 
 <form method="POST" novalidate>
     {{ form.hidden_tag() }}
@@ -74,3 +79,5 @@
         </div> 
     </div>
 </form>
+
+{% endblock %}

@@ -59,8 +59,6 @@ class ThreadForm(FlaskForm):
 
     img = FileField('img', validators=[FileAllowed(['jpg', 'jpg', 'png'])])
 
-    pinned = BooleanField('Pinned')
-
     submit = SubmitField('Confirm')
 
 class CommentsForm(FlaskForm):

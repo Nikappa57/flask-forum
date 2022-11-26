@@ -49,7 +49,6 @@ if not "db" in sys.argv[1]:
     from Site.views.Admin import routes
     from Site.views.Main import routes
     from Site.views.Forum import routes
-    from Site.views.Api import website
     from Site.views.Errors import routes
     from Site.views.Other import routes
     from Site.src.permission_default import create_default_permission

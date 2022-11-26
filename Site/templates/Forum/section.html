@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title%} {{ section.title }} {% endblock %}
+
+{% block content %}
+
 {% if current_user.priority >= section.priority_required_create %}
     <a href="{{ url_for('forumCreateThread', section_slug=section.slug) }}">create thread</a>
 {% endif %}
@@ -39,3 +45,5 @@
     <a href="{{ page.next }}">Next</a>
     {% endif %}
 </div>
+
+{% endblock %}

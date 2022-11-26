@@ -12,3 +12,9 @@ class Category(db.Model):
 
     sections = db.relationship('Section', backref='sections', 
         order_by="Section.position")
+    
+    def to_show(self, user):
+        for section in self.sections:
+            if user.priority >= section.priority_required:
+                return True
+        return False

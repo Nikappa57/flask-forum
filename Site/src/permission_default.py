@@ -3,24 +3,24 @@ from Site.models.permission import Permission
 
 
 default = [
-    ('create category', 0),
-    ('edit category', 0),
-    ('delete category', 0),
+    ('create category', 1000),
+    ('edit category', 500),
+    ('delete category', 1000),
 
-    ('create section', 0),
-    ('edit section', 0),
-    ('delete section', 0),
+    ('create section', 500),
+    ('edit section', 500),
+    ('delete section', 500),
 
-    ('close thread', 0),
-    ('delete thread', 0),
-    ('open thread', 0),
-    ('pin thrad', 0),
+    ('close thread', 300),
+    ('delete thread', 300),
+    ('create thread', 0),
+    ('pin thread', 500),
 
-    ('delete comment', 0),
+    ('delete comment', 300),
     ('create comment', 0),
 
-    ('admin panel', 0),
-    ('limit user', 0),
+    ('admin panel', 1000),
+    ('limit user', 300),
 ]
 
 def create_default_permission() -> None:

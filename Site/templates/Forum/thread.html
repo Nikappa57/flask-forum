@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title%}{{ thread.title }}{% endblock %}
+
+{% block content %}
+
 By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
 {{ thread.text }}
 {% if thread.img %}
@@ -8,20 +14,29 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
 
 {% if current_user.is_authenticated %}
     <!-- staffer -->
-    {% if thread.closed and current_user.check_perm('open thread') %}
-        <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}">open</a>
-    {% elif not thread.closed and current_user.check_perm('open thread') %}
-    <a href="{{ url_for('forumCloseThread', thread_id=thread.id) }}">close</a>
+    <h4>staff action</h4>
+    {% if current_user.check_perm('close thread') %}
+        <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}">
+            {% if thread.closed %} open {% else%} close {% endif %}
+        </a>
     {% endif %}
+
     {% if current_user.check_perm('delete thread') %}
     <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}">delete</a>
     {% endif %}
+
+    {% if current_user.check_perm('pin thread') %}
+    <a href="{{ url_for('forumPinThread', thread_id=thread.id) }}">
+        {% if thread.pinned %} Unpin {% else %} Pin {% endif %}
+    </a>
+    {% endif %}
     <!-- author -->
+    <h4>author action</h4>
     {% if thread.user_id == current_user.id %}
         <a href="{{ url_for('forumEditThread', thread_slug=thread.slug) }}">edit</a>
         <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}">delete</a>
         {% if not thread.closed %}
-        <a href="{{ url_for('forumCloseThread', thread_id=thread.id) }}">close</a>
+        <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}">close</a>
         {% endif %}
     {% endif %}
     <!-- create comment -->
@@ -69,11 +84,9 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
         {{ comment.text }} vote: {{ comment.upvote_num }}<br>
         <!-- comment action -->
         {% if current_user.is_authenticated and not thread.closed %}
-            <a href="{{ url_for('add_cmtupvote', comment_id=comment.id) }}">
-                upvote
-            </a>
-            {% if current_user.check_perm('delete thread') or current_user == comment.user %}
-                <a href="{{ url_for('delete_comment', comment_id=comment.id) }}">
+            <a href="{{ url_for('forumCommentUpVote', thread_id=thread.id, comment_id=comment.id) }}">upvote</a>
+            {% if current_user.check_perm('delete comment') or current_user == comment.user %}
+                <a href="{{ url_for('forumDeleteComment', thread_id=thread.id, comment_id=comment.id) }}">
                     delete
                 </a>
             {% endif%}
@@ -111,12 +124,12 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
                 <!-- subcomment action  -->
                 {% if current_user.is_authenticated and not thread.closed %}
                     <!-- TODO: solo se non è il suo commento -->
-                    <a href="{{ url_for('add_subupvote', comment_id=respose.id) }}">
-                        upvote
-                    </a>
-                    <a href="{{ url_for('delete_subcomment', comment_id=respose.id) }}">
-                        delete
-                    </a>
+                    <a href="{{ url_for('forumSubCommentUpVote', thread_id=thread.id, subcomment_id=respose.id) }}">upvote</a>
+                    {% if current_user.check_perm('delete comment') or current_user == sub_user %}
+                        <a href="{{ url_for('forumDeleteSubComment', thread_id=thread.id, subcomment_id=respose.id) }}">
+                            delete
+                        </a>
+                    {% endif%}
                     <br>
                     <!-- create subcomments to subcomment -->
                     <form method="POST" novalidate>
@@ -147,3 +160,4 @@ By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
         <br>
     {% endif %}
 {% endfor %}
+{% endblock %}

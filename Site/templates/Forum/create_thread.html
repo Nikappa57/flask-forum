@@ -1,3 +1,8 @@
+{% extends 'base.html' %}
+
+{% block title%} Create Thread {% endblock %}
+
+{% block content %}
 
 <form method="POST" enctype='multipart/form-data' novalidate>
     {{ form.hidden_tag() }}
@@ -35,23 +40,7 @@
                     <span>{{ error }}</span><br>
                     {% endfor %}
                 {% endif %}
-                </div>
-
-            {% if current_user.check_perm('pin thrad') %}
-            <div>
-                {{ form.pinned.label }}
-                {{ form.pinned() }}
-        
-                {% if form.pinned.errors %}
-                    {% for error in form.pinned.errors %}
-                    <span>{{ error }}</span><br>
-                    {% endfor %}
-                {% endif %}
-                </div>
-            <div>
-            {% endif %}
-            {{ form.submit(class="btn btn-warning") }}
-            </div>  
+            </div>
         </div>
 
         <br><br>
@@ -66,3 +55,5 @@
         </div> 
     </div>
 </form>
+
+{% endblock %}

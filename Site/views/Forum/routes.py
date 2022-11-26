@@ -12,6 +12,8 @@ from Site.models.category import Category
 from Site.models.threads import Threads
 from Site.models.comment import Comments
 from Site.models.subcomment import Subcomments
+from Site.models.cmt_upvote import CmtUpvote
+from Site.models.sub_upvote import SubUpvote
 from Site.views.Forum.src import changePosition
 from Site.views.Forum.src.messages import Error, Success
 from Site.views.Forum.src.saveFile import saveFile
@@ -116,10 +118,13 @@ def forumSection(section_slug:str):
 
     section = Section.query.filter_by(
         slug=section_slug).first_or_404()
+    
+    if current_user.priority < section.priority_required:
+        return abort(401)
     threads = Threads.query.filter_by(
         section_id=section.id, pinned=False).paginate(
             page_number, 6, True)
-    print(threads)
+
     pinned_threads = Threads.query.filter_by(
         section_id=section.id, pinned=True).all()
     
@@ -250,12 +255,8 @@ def forumThread(thread_slug:str):
     if current_user.is_authenticated:
         thread.add_view(user_id=current_user.id)
     
-    if request.method == 'POST':
-        print("POST DATA", request.form)
-        print("FORM Sub", form_subcomment.submit2.data, form_subcomment.validate_on_submit())
-        print("FORM comm", form_comment.submit1.data, form_comment.validate_on_submit())
-        print("FORM sub", form_subcomment.data)
-        print("FORM com", form_comment)
+    if request.method == 'POST' and current_user.is_authenticated and \
+            current_user.check_perm('create comment'):
         if form_subcomment.submit2.data and form_subcomment.validate_on_submit() and not thread.closed:
             new_subcomment = Subcomments(
                 text=form_subcomment.text2.data,
@@ -266,7 +267,6 @@ def forumThread(thread_slug:str):
 
             db.session.add(new_subcomment)
             db.session.commit()
-            print("SUBCOMMENT CREATO")
             return redirect(url_for('forumThread', thread_slug=thread.slug))
         
         if form_comment.submit1.data and form_comment.validate_on_submit() and not thread.closed:
@@ -278,7 +278,6 @@ def forumThread(thread_slug:str):
 
             db.session.add(new_comment)
             db.session.commit()
-            print("COMMENTO CREATO")
             return redirect(url_for('forumThread', thread_slug=thread.slug))
             
     return render_template("Forum/thread.html", thread=thread, 
@@ -288,9 +287,13 @@ def forumThread(thread_slug:str):
 
 @app.route("/forum/thread/<string:section_slug>/create", methods=["GET", "POST"])
 @login_required
+@check_priority('create thread')
 def forumCreateThread(section_slug:str):
     form = ThreadForm()
     section = Section.query.filter_by(slug=section_slug).first_or_404()
+
+    if current_user.priority < section.priority_required_create:
+        return abort(401)
 
     if form.validate_on_submit():
         new_thread = Threads(
@@ -336,8 +339,6 @@ def forumEditThread(thread_slug:str):
     if form.validate_on_submit():
         thread.text = form.text.data
         thread.title = form.title.data
-        #TODO Only admin
-        thread.pinned = form.pinned.data
         
         if form.img.data:
             try:
@@ -358,9 +359,6 @@ def forumEditThread(thread_slug:str):
         form.title.data = thread.title
         form.text.data = thread.text
 
-        #TODO Only admin
-        form.pinned.data = thread.pinned
-
     return render_template("Forum/create_thread.html", form=form)
 
 
@@ -378,14 +376,14 @@ def forumDeleteThread(thread_id:int):
     return redirect(url_for('forumSection', section_id=section_id))
 
 
-@app.route("/forum/thread/<int:thread_id>/close")
+@app.route("/forum/thread/<int:thread_id>/pin")
 @login_required
-def forumCloseThread(thread_id:int):
+def forumPinThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
 
     if thread.user_id == current_user.id or \
-            current_user.check_perm('delete thread'):
-        thread.closed = True
+            current_user.check_perm('pin thread'):
+        thread.pinned = not thread.pinned
         db.session.commit()
     
     return redirect(url_for('forumThread', thread_slug=thread.slug))
@@ -393,12 +391,74 @@ def forumCloseThread(thread_id:int):
 
 @app.route("/forum/thread/<int:thread_id>/open")
 @login_required
-@check_priority('open thread')
 def forumOpenThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
 
-    thread.closed = False
-    db.session.commit()
+    if thread.user_id == current_user.id or \
+            current_user.check_perm('pin thread'):
+        thread.closed = not thread.closed
+        db.session.commit()
 
     return redirect(url_for('forumThread', thread_slug=thread.slug))
 
+
+@app.route("/forum/thread/<int:thread_id>/delete-comment/<int:comment_id>")
+@login_required
+def forumDeleteComment(thread_id:int, comment_id:int):
+    thread = Threads.query.get_or_404(thread_id)
+    comment = Comments.query.get_or_404(comment_id)
+    if comment.user_id == current_user.id or \
+            current_user.check_perm('delete comment'):
+        db.session.delete(comment)
+        db.session.commit()
+
+    return redirect(url_for('forumThread', thread_slug=thread.slug))
+
+@app.route("/forum/thread/<int:thread_id>/delete-subcomment/<int:subcomment_id>")
+@login_required
+def forumDeleteSubComment(thread_id:int, subcomment_id:int):
+    thread = Threads.query.get_or_404(thread_id)
+    subcomment = Subcomments.query.get_or_404(subcomment_id)
+    if subcomment.user_id == current_user.id or \
+            current_user.check_perm('delete comment'):
+        db.session.delete(subcomment)
+        db.session.commit()
+
+    return redirect(url_for('forumThread', thread_slug=thread.slug))
+
+
+@app.route("/forum/thread/<int:thread_id>/upvote/<int:comment_id>")
+@login_required
+def forumCommentUpVote(thread_id:int, comment_id:int):
+    thread = Threads.query.get_or_404(thread_id)
+    comment = Comments.query.get_or_404(comment_id)
+    vote = comment.check_upvote(current_user.id)
+    
+    if vote:
+        db.session.delete(vote)
+        db.session.commit()
+    else:
+        new_upvote = CmtUpvote(user_id=current_user.id, comment_id=comment_id)
+        db.session.add(new_upvote)
+        db.session.commit()
+        db.session.commit()
+
+    return redirect(url_for('forumThread', thread_slug=thread.slug))
+
+@app.route("/forum/thread/<int:thread_id>/sub-upvote/<int:subcomment_id>")
+@login_required
+def forumSubCommentUpVote(thread_id:int, subcomment_id:int):
+    thread = Threads.query.get_or_404(thread_id)
+    subcomment = Subcomments.query.get_or_404(subcomment_id)
+    vote = subcomment.check_upvote(current_user.id)
+    print(subcomment.text)
+    if vote:
+        db.session.delete(vote)
+        db.session.commit()
+    else:
+        new_upvote = SubUpvote(user_id=current_user.id, comment_id=subcomment_id)
+        db.session.add(new_upvote)
+        db.session.commit()
+        db.session.commit()
+
+    return redirect(url_for('forumThread', thread_slug=thread.slug))

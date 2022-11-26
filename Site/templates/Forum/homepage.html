@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title%} Forum {% endblock %}
+
+{% block content %}
+
 {% if current_user.is_authenticated and current_user.check_perm('create category') %}
 <a href="{{ url_for('forumCategoryCreate') }}">create category</a>
 {% endif %}
@@ -5,15 +11,17 @@
 <br>
 {% for category in categories %}
     <p>
-        <h1>{{ category.name }} </h1>
-        {% if current_user.is_authenticated and current_user.check_perm('edit category') %}
-        <a href="{{ url_for('forumCategoryEdit', category_id=category.id) }}">edit</a>
-        {% endif %}
-        {% if current_user.is_authenticated and current_user.check_perm('delete category') %}
-        <a href="{{ url_for('forumCategoryDelete', category_id=category.id) }}">delete</a>
-        {% endif %}
-        {% if current_user.is_authenticated and current_user.check_perm('create section') %}
-        <a href="{{ url_for('forumSectionCreate', category_id=category.id) }}">add section</a>
+        {% if category.to_show(current_user) or current_user.check_perm('create section') %}
+            <h1>{{ category.name }} </h1>
+            {% if current_user.is_authenticated and current_user.check_perm('edit category') %}
+            <a href="{{ url_for('forumCategoryEdit', category_id=category.id) }}">edit</a>
+            {% endif %}
+            {% if current_user.is_authenticated and current_user.check_perm('delete category') %}
+            <a href="{{ url_for('forumCategoryDelete', category_id=category.id) }}">delete</a>
+            {% endif %}
+            {% if current_user.is_authenticated and current_user.check_perm('create section') %}
+            <a href="{{ url_for('forumSectionCreate', category_id=category.id) }}">add section</a>
+            {% endif %}
         {% endif %}
     </p>
     {% for section in category.sections %}
@@ -45,3 +53,5 @@
         {% endif %}
     {% endfor %}
 {% endfor %}
+
+{% endblock %}
