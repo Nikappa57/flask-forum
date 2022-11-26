@@ -4,46 +4,58 @@
 
 {% block content %}
 
-<form method="POST" novalidate>
-    {{ form.hidden_tag() }}
-    <div>
-        <div>
-            <div>
-            {{ form.name.label }}
-            {{ form.name(placeholder="Title") }}
-    
-            {% if form.name.errors %}
-                {% for error in form.name.errors %}
-                <span>{{ error }}</span><br>
-                {% endfor %}
-            {% endif %}
-            </div>
-        </div>
-        <div>
-            <div>            
-            {{ form.position.label }}
-            {{ form.position() }}
-
-            {% if form.position.errors %}
-                {% for error in form.position.errors %}
-                <span>{{ error }}</span><br>
-                {% endfor %}
-            {% endif %}
-            </div>
-            <div>
-            {{ form.submit(class="btn btn-warning") }}
-            </div>  
-        </div>
-
-        <br><br>
-        <div>
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                <span>{{ message }}</span><br>
-                {% endfor %}
-            {% endif %}
+<section class="min-vh-100 py-5">
+    <div class="row justify-content-center pt-6">
+      <div class="col-xl-4 col-lg-5 col-md-6">
+          <div class="text-center mb-4">
+              <h1 class="mb-1">Category</h1>
+          </div>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                  {% for cat, message in messages %}
+                      {% if cat == 'error' %}
+                          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                              <b>Error!</b> {{ message }}
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
+                                </button>
+                          </div>
+                      {% elif cat == 'success' %}
+                      <div class="alert alert-success alert-dismissible fade show" role="alert">
+                          {{ message }}
+                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                          </button>
+                      </div>
+                      {% endif %}
+                  {% endfor %}
+              {% endif %}
             {% endwith %}
-        </div> 
+          <form method="POST" novalidate>
+              {{ form.hidden_tag() }}
+              <div class="form-group has-error pb-2">
+                  {{ form.name(placeholder="Name", class="form-control") }}
+              </div>
+              {% if form.name.errors %}
+                  {% for error in form.name.errors %}
+                  <span aria-hidden="true">{{ error }}</span><br>
+                  {% endfor %}
+              {% endif %}
+              <div class="form-group pb-2">
+                  {{ form.position(class="form-control") }}
+              </div>
+              {% if form.position.errors %}
+                  {% for error in form.position.errors %}
+                  <span aria-hidden="true">{{ error }}</span><br>
+                  {% endfor %}
+              {% endif %}
+
+              <div class="form-group text-center">
+                  {{ form.submit(class="btn-block btn btn-primary") }}
+              </div>
+          </form>
+      </div>
     </div>
-</form>
+</section>
+
+{% endblock %}

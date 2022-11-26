@@ -4,54 +4,72 @@
 
 {% block content %}
 
-{% if current_user.is_authenticated and current_user.check_perm('create category') %}
-<a href="{{ url_for('forumCategoryCreate') }}">create category</a>
-{% endif %}
+<h1 class="text-center pb-5">Forum</h1>
 
 <br>
+{% if current_user.is_authenticated and current_user.check_perm('delete category') %}
+<a href="{{ url_for('forumCategoryCreate') }}" class="btn btn-success mb-3">create category</a>
+{% endif %}
+
 {% for category in categories %}
-    <p>
-        {% if category.to_show(current_user) or current_user.check_perm('create section') %}
-            <h1>{{ category.name }} </h1>
-            {% if current_user.is_authenticated and current_user.check_perm('edit category') %}
-            <a href="{{ url_for('forumCategoryEdit', category_id=category.id) }}">edit</a>
-            {% endif %}
-            {% if current_user.is_authenticated and current_user.check_perm('delete category') %}
-            <a href="{{ url_for('forumCategoryDelete', category_id=category.id) }}">delete</a>
-            {% endif %}
-            {% if current_user.is_authenticated and current_user.check_perm('create section') %}
-            <a href="{{ url_for('forumSectionCreate', category_id=category.id) }}">add section</a>
-            {% endif %}
+{% if category.to_show(current_user) %}
+
+<div class="card mb-5">
+    <div class="card-header">
+        <h1 class="display-5">{{ category.name }}</h1>
+    </div>
+    <div class="container mt-3">
+    <div class="pb-3">
+        {% if current_user.is_authenticated  %}
+        {% if current_user.check_perm('edit category') %}
+        <a href="{{ url_for('forumCategoryEdit', category_id=category.id) }}" class="btn btn-warning">edit</a>
         {% endif %}
-    </p>
+        {% if current_user.check_perm('delete category') %}
+        <!-- TODO: don't work -->
+        <a href="{{ url_for('forumCategoryDelete', category_id=category.id) }}" class="btn btn-danger">delete</a>
+        {% endif %}
+        {% if current_user.check_perm('create section') %}
+        <a href="{{ url_for('forumSectionCreate', category_id=category.id) }}" class="btn btn-success">add section</a>
+        {% endif %}
+        {% endif %}
+    </div>
     {% for section in category.sections %}
         {% if not section.priority_required or (current_user.is_authenticated and current_user.priority >= section.priority_required) %}
-            <h3><a href="{{ url_for('forumSection', section_slug=section.slug) }}">{{ section.name }}</a>
-            {% if current_user.is_authenticated %}
+            <div class="card mb-3">
+                <h5 class="card-header">{{ section.name }}</h5>
+                <div class="card-body">
+                <h5 class="card-title">{{ section.desc }}</h5>
+                <p class="card-text">({{ section.threads|length }} post)</p>
+                <p class="card-text">
+                    {% set last_post = section.last_post  %}
+                    {% if last_post %}
+                        {% set last_post_user = last_post.user %}
+                        <b>Last post: </b> 
+                        <a href="{{ url_for('forumThread', thread_slug=last_post.slug) }}" class="card-link"> 
+                            {{ last_post.title }} 
+                        </a>{{ last_post.create_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                        <i>
+                            {% if last_post_user %} 
+                            by {{ last_post_user.username }} 
+                            {% endif %}
+                        </i>
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('forumSection', section_slug=section.slug) }}" class="btn btn-primary">Open</a>
+                {% if current_user.is_authenticated %}
                 {% if current_user.check_perm('edit section') %}
-                <a href="{{ url_for('forumSectionEdit', section_slug=section.slug) }}">edit</a>
+                <a href="{{ url_for('forumSectionEdit', section_slug=section.slug) }}" class="btn btn-warning">edit</a>
                 {% endif %}
                 {% if current_user.check_perm('delete section') %}
-                <a href="{{ url_for('forumSectionDelete', section_slug=section.slug) }}">delete</a>
+                <a href="{{ url_for('forumSectionDelete', section_slug=section.slug) }}" class="btn btn-danger">delete</a>
                 {% endif %}
-            {% endif %}
-            </h3>
-            <i>{{ section.desc }}</i> ({{ section.threads|length }} post)
-            
-            {% set last_post = section.last_post  %}
-            {% if last_post %}
-                {% set last_post_user = last_post.user %}
-                <b>Last post: </b> 
-                <a href="{{ url_for('forumThread', thread_slug=last_post.slug) }}"> 
-                    {{ last_post.title }} 
-                </a><br> {{ last_post.create_at.strftime('%d/%m/%Y %H:%M:%S') }}
-                {% if last_post_user %} 
-                    by {{ last_post_user.username }} 
                 {% endif %}
-            {% endif %}   
-            <br>
+                </div>
+            </div>
         {% endif %}
     {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endfor %}
-
 {% endblock %}

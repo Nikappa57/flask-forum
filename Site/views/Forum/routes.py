@@ -115,18 +115,19 @@ def forumCategoryDelete(category_id:int):
 @app.route("/forum/<string:section_slug>")
 def forumSection(section_slug:str):
     page_number = request.args.get('page', 1, type=int)
-
+    print(page_number)
     section = Section.query.filter_by(
         slug=section_slug).first_or_404()
     
     if current_user.priority < section.priority_required:
         return abort(401)
+    
     threads = Threads.query.filter_by(
         section_id=section.id, pinned=False).paginate(
             page_number, 6, True)
 
     pinned_threads = Threads.query.filter_by(
-        section_id=section.id, pinned=True).all()
+        section_id=section.id, pinned=True).all() if page_number == 1 else list()
     
     next_page = url_for('forumSection', section_slug=section_slug,
         page=threads.next_num) if threads.has_next else None
@@ -248,6 +249,7 @@ def forumSectionDelete(section_slug:str):
 @app.route("/forum/thread/<string:thread_slug>/", methods=["GET", "POST"])
 def forumThread(thread_slug:str):
     thread = Threads.query.filter_by(slug=thread_slug).first_or_404()
+    section = Section.query.get_or_404(thread.section_id)
     user = Users.query.get_or_404(thread.user_id)
     form_comment = CommentsForm()
     form_subcomment = SubCommentsForm()
@@ -281,8 +283,8 @@ def forumThread(thread_slug:str):
             return redirect(url_for('forumThread', thread_slug=thread.slug))
             
     return render_template("Forum/thread.html", thread=thread, 
-        comments=thread.comments, form_comment=form_comment, 
-            form_subcomment=form_subcomment, user=user, Users=Users)
+        comments=thread.comments, form_comment=form_comment, section=section, 
+            form_subcomment=form_subcomment, user=user, Users=Users,)
 
 
 @app.route("/forum/thread/<string:section_slug>/create", methods=["GET", "POST"])
@@ -340,6 +342,7 @@ def forumEditThread(thread_slug:str):
         thread.text = form.text.data
         thread.title = form.title.data
         
+        print(form.img.data, request.files)
         if form.img.data:
             try:
                 img = saveFile(form.img.data)

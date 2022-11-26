@@ -48,7 +48,7 @@ class Users(UserMixin, db.Model):
 
     @property
     def rank(self) -> int:
-        return Rank.query.get_or_404(self.rank_id).name
+        return Rank.query.get_or_404(self.rank_id)
 
     @property
     def tag(self) -> set:

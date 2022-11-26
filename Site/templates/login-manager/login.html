@@ -6,52 +6,67 @@
 
 {% block content %}
 
-
-<section>
-  <form method="POST" novalidate>
-    {{ form.hidden_tag() }}
-    <div>
-      <div>
-        <div>
-          {{ form.email.label }}
-          {{ form.email(type="email", placeholder="Email") }}
-  
-          {% if form.email.errors %}
-            {% for error in form.email.errors %}
-              <span>{{ error }}</span><br>
-            {% endfor %}
-          {% endif %}
-        </div>
-        <div>
-          {{ form.password.label }}
-          {{ form.password(type="password",  placeholder="Password") }}
-  
-          {% if form.password.errors %}
-            {% for error in form.password.errors %}
-              <span>{{ error }}</span><br>
-            {% endfor %}
-          {% endif %}
-        </div>
-        <div>
-          <p>{{ form.remember_me(class="form-check-label btnbtn-warning") }} {{ form.remember_me.label }}</p>
-        </div>
-        <div>
-          {{ form.submit(class="btn btn-warning") }}
-        </div>  
-      </div >
-      <br><br>
-      <div>
-        {% with messages = get_flashed_messages() %}
+<section class="min-vh-100 py-5">
+<div class="row justify-content-center pt-6">
+  <div class="col-xl-4 col-lg-5 col-md-6">
+      <div class="text-center mb-4">
+          <h1 class="mb-1">Welcome back</h1>
+          <span>Enter your account details below</span>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            {% for message in messages %}
-              <span>{{ message }}</span><br>
-            {% endfor %}
+              {% for category, message in messages %}
+                  {% if category == 'error' %}
+                      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                          <b>Authentication Failed!</b> {{ message }}
+                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                      </div>
+                  {% elif category == 'success' %}
+                  <div class="alert alert-success alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                      </button>
+                  </div>
+                  {% endif %}
+              {% endfor %}
           {% endif %}
         {% endwith %}
-      </div> 
-      
-    </div>
-  </form>
+        {% if form.password.errors %}
+              {% for error in form.password.errors %}
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                  <b>Registration Failed!</b> {{ error }}
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+              {% endfor %}
+          {% endif %}
+      <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="form-group has-error pb-2">
+              {{ form.email(type="email", placeholder="Email", class="form-control") }}
+          </div>
+          {% if form.email.errors %}
+              {% for error in form.email.errors %}
+              <span aria-hidden="true">{{ error }}</span><br>
+              {% endfor %}
+          {% endif %}
+          <div class="form-group pb-2">
+              {{ form.password(type="password", placeholder="Password", class="form-control") }}
+          </div>
+          <div class="form-group text-center">
+              {{ form.submit(class="btn-block btn btn-primary") }}
+          </div>
+          <hr>
+          <div class="text-center text-small text-muted">
+          <span>Don't have an account yet? <a href="{{ url_for('register') }}">Create one</a><br>
+          <span><a href="{{ url_for('resetpassword') }}">Forgot your password?</a></span>
+          </div>
+      </form>
+  </div>
+</div>
 </section>
-
 {% endblock %}

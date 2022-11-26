@@ -14,7 +14,15 @@ class Category(db.Model):
         order_by="Section.position")
     
     def to_show(self, user):
+        if user.is_authenticated:
+            if user.check_perm('create section'):
+                return True
+            
+            for section in self.sections:
+                if user.priority >= section.priority_required:
+                    return True
+            
         for section in self.sections:
-            if user.priority >= section.priority_required:
+            if not section.priority_required:
                 return True
         return False

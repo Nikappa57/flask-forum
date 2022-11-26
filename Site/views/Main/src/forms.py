@@ -38,3 +38,20 @@ class RegisterForm(FlaskForm):
 
     submit = SubmitField('Register')
 
+    
+class ResetPasswordForm(FlaskForm):
+    email = EmailField('Email', validators=[
+        validators.DataRequired("This field is required."), 
+        validators.Email()])
+    submit = SubmitField('Confirm')
+
+
+class ResetPassword2Form(FlaskForm):
+    password = PasswordField('Password', validators=[
+            validators.InputRequired("This field is required."), 
+            validators.EqualTo('confirm', message="Passwords don't match"), 
+            validators.Length(min=6, max=40, 
+                message="The Password must contain between 6 and 40 characters")])
+    confirm = PasswordField('Confirm Password')
+    submit = SubmitField('Confirm')
+

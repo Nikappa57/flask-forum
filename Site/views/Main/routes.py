@@ -3,14 +3,16 @@ from flask_login import current_user, login_user, logout_user, login_required
 
 from Site import app, db
 from Site.models.users import Users
-from Site.views.Main.src.forms import LoginForm, RegisterForm
+from Site.views.Main.src.forms import LoginForm, RegisterForm, \
+    ResetPasswordForm, ResetPassword2Form
 from Site.views.Main.src.messages import Error, Success
 from Site.src.linkaccount import LinkAccount
-
+from Site.src.email import send_email
 
 @app.route("/")
 def homepage():
-    return render_template("homepage.html")
+    return redirect(url_for("forumHomepage"))
+    # return render_template("homepage.html")
 
 @app.route("/login/", methods=["GET", "POST"])
 def login():
@@ -69,31 +71,60 @@ def register():
     return render_template("login-manager/register.html", form=form)
 
 
+
+@app.route("/reset-password/", methods=['GET', 'POST'])
+def resetpassword():
+    if current_user.is_authenticated:
+        return redirect(url_for('account'))
+
+    form = ResetPasswordForm()
+
+    if form.validate_on_submit():
+        user = Users.query.filter_by(email=form.email.data).first()
+
+        if not user:
+            flash("There is no user with this email", "error")
+            return redirect(url_for('login'))
+
+        token = user.generate_confirmation_token()
+        reset_url = url_for('reset_password_token', token=token, _external=True)
+        html = render_template('mail/reset.html', reset_url=reset_url)
+        subject = "Reset your password"
+        send_email(user.email, subject, html)
+
+        flash("Reset email sent successfully", "success")
+        return redirect(url_for('login'))
+    return render_template('login-manager/reset-password.html', form=form)
+
+
 @app.route("/reset-password/<token>", methods=['GET', 'POST'])
-def resetpassword(token):
+def reset_password_token(token):
     if current_user.is_authenticated:
         return redirect(url_for('account'))
 
     try:
-        email = LinkAccount.confirm_token(token)[0]
+        email = Users.confirm_token(token)
     except:
-        return Error.link_expired
+        flash('The confirmation link is invalid or has expired.', 'error')
+
+        return redirect(url_for('login'))
     
     user = Users.query.filter_by(email=email).all()
-
     if not user:
-        return Error.link_expired
+        flash('The confirmation link is invalid or has expired.', 'error')
+
+        return redirect(url_for('login'))
     
-    form = RegisterForm()
+    form = ResetPassword2Form()
     if form.validate_on_submit():
         user = user[-1]
         user.password = form.password.data
         user.set_password_hash()
 
         db.session.commit()
-        flash(Success.password_reset, Success.name)
-        return "User Panel" #TODO
-    return render_template('login-manager/reset-password.html', form=form)
+        flash('password successfully reset', 'success')
+        return redirect(url_for('login'))
+    return render_template('login-manager/reset-password-2.html', form=form)
 
 
 @app.route("/logout")

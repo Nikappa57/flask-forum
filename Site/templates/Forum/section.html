@@ -1,49 +1,100 @@
 {% extends 'base.html' %}
 
-{% block title%} {{ section.title }} {% endblock %}
+{% block title%} {{ section.name }} {% endblock %}
 
 {% block content %}
 
-{% if current_user.priority >= section.priority_required_create %}
-    <a href="{{ url_for('forumCreateThread', section_slug=section.slug) }}">create thread</a>
-{% endif %}
-<br><br>
-{% for thread in pinned_threads %}
-    <h2>{{ thread.title }} {{ thread.create_at }}</h2> 
-    {% set user = thread.user %}
-    {% if user %}
-        <i>by {{ user.username }}</i>
-    {% endif %}
-    <a href="{{ url_for('forumThread', thread_slug=thread.slug) }}">link</a>
-    <br>
-{% endfor %}
-<hr>
-{% for thread in threads.items %}
-    <a href="{{ url_for('forumThread', thread_slug=thread.slug) }}">
-        <b>{{ thread.title }}</b>
-    </a> {{ thread.create_at.strftime('%d/%m/%Y %H:%M:%S') }}
-    {% set user = thread.user %} 
-    {% if user %}
-        <i>by {{ user.username }}</i>
-    {% endif %}
-    Views: {{ thread.views }}
-    Respose: {{ thread.comments|length }}
-    {% if thread.comments %}
-    last respose by: {{ thread.comments[-1].user.username }}
-    {% endif %}
-    
-    <br>
-{% endfor %}
+<h1 class="text-center pb-5">{{ section.name }}</h1>
+
+<nav aria-label="breadcrumb mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('forumHomepage') }}">Forum</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Section - {{ section.name }}</li>
+    </ol>
+</nav>
+
+<table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">Author</th>
+        <th scope="col">Created At</th>
+        <th scope="col">Views</th>
+        <th scope="col">Response</th>
+        <th scope="col">Last by</th>
+      </tr>
+    </thead>
+    <tbody>
+        <!-- pinned threads  -->
+        {% for thread in pinned_threads %}
+        <tr class="table-active">
+            <th scope="row">{{ loop.index + (page['current'] - 1) * 6 }}</th>
+            <td><a href="{{ url_for('forumThread', thread_slug=thread.slug) }}">{{ thread.title }}</a></td>
+            {% set user = thread.user %}
+            <td>
+            {% if user %}
+            <a href="{{ user.profile_link }}" class="card-link">{{ user.tag }}</a>
+            {% endif %}
+            </td>
+            <td>{{ thread.create_at.strftime("%d/%m/%Y %H:%M:%S") }}</td>
+            <td>{{ thread.views }}</td>
+            <td>{{ thread.comments|length }}</td>
+            <td>
+            {% if thread.comments %}
+            <a href="{{ thread.comments[-1].user.profile_link }}" class="card-link">{{ thread.comments[-1].user.tag }}</a>
+            {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        <!-- threads  -->
+        {% for thread in threads.items %}
+        <tr>
+            <th scope="row">{{ loop.index + pinned_threads|length + (page['current'] - 1) * 6 }}</th>
+            <td><a href="{{ url_for('forumThread', thread_slug=thread.slug) }}">{{ thread.title }}</a></td>
+            {% set user = thread.user %}
+            <td>
+            {% if user %}
+            <a href="{{ user.profile_link }}" class="card-link">{{ user.tag }}</a>
+            {% endif %}
+            </td>
+            <td>{{ thread.create_at.strftime("%d/%m/%Y %H:%M:%S") }}</td>
+            <td>{{ thread.views }}</td>
+            <td>{{ thread.comments|length }}</td>
+            <td>
+            {% if thread.comments %}
+            <a href="{{ thread.comments[-1].user.profile_link }}" class="card-link">{{ thread.comments[-1].user.tag }}</a>
+            {% endif %}
+        </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
 
 <!-- PAGES -->
-<div>
-    {% if page.prev %}
-    <a href="{{ page.prev }}">Back</a>
-    {% endif %}
+<nav aria-label="Page navigation example">
+    <ul class="pagination">
+        {% if page.prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ page.prev }}" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+            <span class="sr-only">Previous</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if page.next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ page.next }}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+            <span class="sr-only">Next</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
 
-    {% if page.next %}
-    <a href="{{ page.next }}">Next</a>
-    {% endif %}
-</div>
+{% if current_user.priority >= section.priority_required_create %}
+  <a href="{{ url_for('forumCreateThread', section_slug=section.slug) }}" class="btn btn-success">create thread</a>
+{% endif %}
 
 {% endblock %}

@@ -57,7 +57,7 @@ class ThreadForm(FlaskForm):
         validators.Length(min=5, max=1024, message=
             Error.length.format(name='text', min=3, max=1024))])
 
-    img = FileField('img', validators=[FileAllowed(['jpg', 'jpg', 'png'])])
+    img = FileField('img', validators=[FileAllowed(['jpg', 'jpg', 'png', 'jpeg'])])
 
     submit = SubmitField('Confirm')
 

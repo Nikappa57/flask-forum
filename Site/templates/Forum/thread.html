@@ -1,163 +1,215 @@
 {% extends 'base.html' %}
 
-{% block title%}{{ thread.title }}{% endblock %}
+{% block title%} {{ thread.title }} {% endblock %}
 
 {% block content %}
 
-By: {{ user.username }}{{ thread.title }} Views: {{ thread.views }} <br>
-{{ thread.text }}
-{% if thread.img %}
-<img src="{{ url_for('static', filename='thread-img/') + thread.img }}" alt="{{ thread.img }}">
-{% endif %}
+<nav aria-label="breadcrumb mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('forumHomepage') }}">Forum</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('forumSection', section_slug=section.slug) }}">Section - {{ section.name }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Thread - {{ thread.title }}</li>
+    </ol>
+</nav>
 
-<hr>
-
-{% if current_user.is_authenticated %}
-    <!-- staffer -->
-    <h4>staff action</h4>
-    {% if current_user.check_perm('close thread') %}
-        <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}">
-            {% if thread.closed %} open {% else%} close {% endif %}
-        </a>
-    {% endif %}
-
-    {% if current_user.check_perm('delete thread') %}
-    <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}">delete</a>
-    {% endif %}
-
-    {% if current_user.check_perm('pin thread') %}
-    <a href="{{ url_for('forumPinThread', thread_id=thread.id) }}">
-        {% if thread.pinned %} Unpin {% else %} Pin {% endif %}
-    </a>
-    {% endif %}
-    <!-- author -->
-    <h4>author action</h4>
-    {% if thread.user_id == current_user.id %}
-        <a href="{{ url_for('forumEditThread', thread_slug=thread.slug) }}">edit</a>
-        <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}">delete</a>
-        {% if not thread.closed %}
-        <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}">close</a>
-        {% endif %}
-    {% endif %}
-    <!-- create comment -->
-    {% if not thread.closed %}
-    <form method="POST" novalidate>
-        {{ form_comment.hidden_tag() }}
-        <div>
-            <div>
-                <div>
-                {{ form_comment.text1.label }}
-                {{ form_comment.text1(type="text", placeholder="Text") }}
-        
-                {% if form_comment.text1.errors %}
-                    {% for error in form_comment.text1.errors %}
-                    <span>{{ error }}</span><br>
-                    {% endfor %}
-                {% endif %}
-                </div>
-                <div>
-                {{ form_comment.submit1(class="btn btn-warning") }}
-                </div>  
-            </div >
-            <br><br>
-            <div>
-                {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                    <span>{{ message }}</span><br>
-                    {% endfor %}
-                {% endif %}
-                {% endwith %}
-            </div> 
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title">{{ thread.title }}</h3>
+        <p>By: <a href="{{ user.profile_link }}">{{ user.tag }}</a></p>
+        <p class="card-text">{{ thread.text }}</p>
+        {% if thread.img %}
+        <div style="height: 40vh;">
+            <img class="img-fluid mh-100 text-center" src="{{ url_for('static', filename='thread-img/') }}{{ thread.img }}" alt="img">
         </div>
-    </form>
-    {% endif %}
-{% endif %}
-
-{% for comment in comments %}
-    <hr>
-    {% set user = comment.user %}
-    {% if user %}
-        <!-- Comments  -->
-        [COMMENTO]{{ comment.crate_at }} <br>
-        by: {{ user.username }} RANK: {{ user.rank }}  <br>
-        {{ comment.text }} vote: {{ comment.upvote_num }}<br>
-        <!-- comment action -->
-        {% if current_user.is_authenticated and not thread.closed %}
-            <a href="{{ url_for('forumCommentUpVote', thread_id=thread.id, comment_id=comment.id) }}">upvote</a>
-            {% if current_user.check_perm('delete comment') or current_user == comment.user %}
-                <a href="{{ url_for('forumDeleteComment', thread_id=thread.id, comment_id=comment.id) }}">
-                    delete
+        {% endif %}
+        <hr>
+        <p class="card-text"><small class="text-muted">written on {{ thread.create_at.strftime('%d/%m/%Y at %H:%M:%S') }} ({{ thread.views }} views)</small></p>
+        {% if current_user.is_authenticated %}
+        <div class="mb-3">
+            <!-- staffer -->
+            {% if current_user.check_perm('close thread') %}
+                <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}" class="btn btn-{% if thread.closed %}success{% else %}warning{% endif %}">
+                    {% if thread.closed %} open {% else%} close {% endif %}
                 </a>
-            {% endif%}
-        {% endif%}
-        <!-- create subcomments to comment -->
-        <form method="POST" novalidate>
-            {{ form_subcomment.hidden_tag() }}
-            <h4>RISPONDI AL COMMENTO</h4>
-            <div>
-                <div>
-                    {{ form_subcomment.text2.label }}
-                    {{ form_subcomment.text2(type="text", placeholder="Text") }}
-                    {{ form_subcomment.comment_id(value=comment.id, type="hidden") }}
-                    {{ form_subcomment.to_user_id(value=comment.user_id, type="hidden") }}
-            
-                    {% if form_subcomment.text2.errors %}
-                        {% for error in form_subcomment.text2.errors %}
-                        <span>{{ error }}</span><br>
-                        {% endfor %}
-                    {% endif %}
-                    </div>
-                    <div>
-                    {{ form_subcomment.submit2(class="btn btn-warning") }}
-                    </div>  
-                </div>
-            </div> 
-        </form>
-        <!-- subcomments -->
-        {% for respose in comment.subcomments %}
-            {% set sub_user = respose.user %}
-            {% if sub_user %}
-                [SUBCOMMENT] {{ respose.crate_at }} <br>
-                {{ sub_user.username }} RANK: {{ sub_user.rank }} <br>
-                <p>response:  <a href="{{ respose.to_user.profile_link }}">{{ respose.to_user.tag }}</a> {{ respose.text }} vote: {{ respose.upvote_num }}</p>
-                <!-- subcomment action  -->
-                {% if current_user.is_authenticated and not thread.closed %}
-                    <!-- TODO: solo se non è il suo commento -->
-                    <a href="{{ url_for('forumSubCommentUpVote', thread_id=thread.id, subcomment_id=respose.id) }}">upvote</a>
-                    {% if current_user.check_perm('delete comment') or current_user == sub_user %}
-                        <a href="{{ url_for('forumDeleteSubComment', thread_id=thread.id, subcomment_id=respose.id) }}">
-                            delete
-                        </a>
-                    {% endif%}
-                    <br>
-                    <!-- create subcomments to subcomment -->
-                    <form method="POST" novalidate>
-                        {{ form_subcomment.hidden_tag() }}
-                        <h4>RISPONDI AL SUBCOMMENTO</h4>
-                        <div>
-                            <div>
-                                {{ form_subcomment.text2.label }}
-                                {{ form_subcomment.text2(type="text", placeholder="Text") }}
-                                {{ form_subcomment.comment_id(value=comment.id, type="hidden") }}
-                                {{ form_subcomment.to_user_id(value=sub_user.id, type="hidden") }}
-                        
-                                {% if form_subcomment.text2.errors %}
-                                    {% for error in form_subcomment.text2.errors %}
-                                    <span>{{ error }}</span><br>
-                                    {% endfor %}
-                                {% endif %}
-                                </div>
-                                <div>
-                                {{ form_subcomment.submit2(class="btn btn-warning") }}
-                                </div>  
-                            </div>
-                        </div> 
-                    </form>
+            {% endif %}
+            {% if current_user.check_perm('delete thread') %}
+                <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}" class="btn btn-danger">delete</a>
+            {% endif %}
+            {% if current_user.check_perm('pin thread') %}
+                <a href="{{ url_for('forumPinThread', thread_id=thread.id) }}" class="btn btn-info">
+                    {% if thread.pinned %} Unpin {% else %} Pin {% endif %}
+                </a>
+            {% endif %}
+        </div>
+        <div>
+            <!-- author -->
+            {% if thread.user_id == current_user.id %}
+                <a href="{{ url_for('forumEditThread', thread_slug=thread.slug) }}" class="btn btn-success">edit</a>
+                <a href="{{ url_for('forumDeleteThread', thread_id=thread.id) }}" class="btn btn-danger">delete</a>
+                {% if not thread.closed %}
+                <a href="{{ url_for('forumOpenThread', thread_id=thread.id) }}" class="btn btn-warning">close</a>
                 {% endif %}
             {% endif %}
-        {% endfor %}
-        <br>
+        </div>
+        {% if not thread.closed %}
+        <a class="card-link" data-bs-toggle="collapse" href="#collapseCMT" role="button" aria-bs-expanded="false" aria-bs-controls="collapseCMT">Reply</a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+    <!-- create comment -->
+    {% if not thread.closed %}
+    <div class="collapse" id="collapseCMT">
+        <div class="card mt-2">
+            <div class="card-body">
+                <h6 class="card-title">Reply</h6>
+                <form method="POST" novalidate>
+                    {{ form_comment.hidden_tag() }}
+                    <div class="form-group has-error pb-2">
+                        {{ form_comment.text1(placeholder="Comment", class="form-control") }}
+                    </div>
+                    {% if form_comment.text1.errors %}
+                        {% for error in form_comment.text1.errors %}
+                        <span aria-hidden="true">{{ error }}</span><br>
+                        {% endfor %}
+                    {% endif %}
+    
+                    <div class="form-group text-center">
+                        {{ form_comment.submit1(class="btn btn-block btn-primary btn-lg") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     {% endif %}
-{% endfor %}
+{% endif %}
+
+<div class="mt-5">
+    {% if comments %}<h3>Comments</h3>{% endif %}
+    {% for comment in comments %}
+        {% set user = comment.user %}
+        {% if user %}
+            <div class="card container pt-2 pb-2 mt-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {{ user.username }}
+                            <span class="badge bg-{{ user.rank.tag_color }}">{{ user.rank.tag }}</span>
+                        </h5>
+                        <p class="card-text">{{ comment.text }}</p>
+                        <p class="card-text"><small class="text-muted">
+                            <span class="badge bg-info">{{ comment.upvote_num }} votes</span> written on {{ comment.create_at.strftime('%d/%m/%Y at %H:%M:%S') }}
+                        </small></p>
+                        <!-- comment action -->
+                        {% if current_user.is_authenticated and not thread.closed %}
+                        <a href="{{ url_for('forumCommentUpVote', thread_id=thread.id, comment_id=comment.id) }}" class="card-link">upvote</a>
+                        <a class="card-link" data-bs-toggle="collapse" href="#multiCollapseCMT{{ comment.id }}" role="button" aria-expanded="false" aria-controls="multiCollapseCMT{{ comment.id }}">Reply</a>
+                        {% if current_user.check_perm('delete comment') or current_user == comment.user %}
+                            <a href="{{ url_for('forumDeleteComment', thread_id=thread.id, comment_id=comment.id) }}" class="card-link">
+                                delete
+                            </a>
+                        {% endif %}
+                        {% endif %}
+                        {% if comment.subcomments %}
+                        <a class="card-link" class="btn btn-primary" data-bs-toggle="collapse" href="#multiCollapseSubcomments{{ comment.id }}" role="button" aria-expanded="false" aria-controls="multiCollapseSubcomments{{ comment.id }}">Comments</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if current_user.is_authenticated and not thread.closed %}
+                <!-- create subcomments to comment -->
+                <div class="collapse multi-collapse" id="multiCollapseCMT{{ comment.id }}">
+                    <div class="card mt-2 mb-2">
+                        <div class="card-body">
+                            <h6 class="card-title">Reply</h6>
+                            <form method="POST" novalidate>
+                                {{ form_subcomment.hidden_tag() }}
+                                {{ form_subcomment.comment_id(value=comment.id, type="hidden") }}
+                                {{ form_subcomment.to_user_id(value=comment.user_id, type="hidden") }}
+                                <div class="form-group has-error pb-2">
+                                    {{ form_subcomment.text2(placeholder="Comment", class="form-control") }}
+                                </div>
+                                {% if form_subcomment.text2.errors %}
+                                    {% for error in form_subcomment.text2.errors %}
+                                    <span aria-hidden="true">{{ error }}</span><br>
+                                    {% endfor %}
+                                {% endif %}
+                        
+                                <div class="form-group text-center">
+                                    {{ form_subcomment.submit2(class="btn btn-block btn-primary btn-lg") }}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="collapse multi-collapse" id="multiCollapseSubcomments{{ comment.id }}">
+                    <!-- subcomments -->
+                    <div class="container mt-2 mb-2">
+                        {% for respose in comment.subcomments %}
+                        {% set sub_user = respose.user %}
+                        {% set sub_to_user = respose.to_user %}
+                        {% if sub_user and sub_to_user %}
+                            <div class="card mt-2 mb-2">
+                                <div class="card-body">
+                                    <h7 class="card-title">
+                                        {{ sub_user.username }}
+                                        <span class="badge bg-{{ sub_user.rank.tag_color }}">{{ sub_user.rank.tag }}</span>
+                                    </h7>
+                                    <p class="card-text">
+                                        <a href="{{ sub_to_user.profile_link }}" class="card-title">{{ sub_to_user.tag }}</a>
+                                        {{ respose.text }}
+                                    </p>
+                                    <p class="card-text"><small class="text-muted">
+                                        <span class="badge bg-info">{{ respose.upvote_num }} votes</span> written on {{ respose.create_at.strftime('%d/%m/%Y at %H:%M:%S') }}
+                                    </small></p>
+                                    <!-- comment action -->
+                                    {% if current_user.is_authenticated and not thread.closed %}
+                                    <a href="{{ url_for('forumSubCommentUpVote', thread_id=thread.id, subcomment_id=respose.id) }}" class="card-link">upvote</a>
+                                    <a class="card-link" data-bs-toggle="collapse" href="#multiCollapseSub{{ respose.id }}" role="button" aria-expanded="false" aria-controls="multiCollapseSub{{ respose.id }}">Reply</a>
+                                    {% if current_user.check_perm('delete comment') or current_user == comment.user %}
+                                        <a href="{{ url_for('forumDeleteSubComment', thread_id=thread.id, subcomment_id=respose.id) }}" class="card-link">
+                                            delete
+                                        </a>
+                                    {% endif%}
+                                {% endif%}
+                                </div>
+                            </div>
+        
+                            {% if current_user.is_authenticated and not thread.closed %}
+                                <!-- create subcomments to subcomment -->
+                                <div class="collapse multi-collapse" id="multiCollapseSub{{ respose.id }}">
+                                    <div class="card mt-2 mb-2">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Reply</h6>
+                                            <form method="POST" novalidate>
+                                                {{ form_subcomment.hidden_tag() }}
+                                                {{ form_subcomment.comment_id(value=comment.id, type="hidden") }}
+                                                {{ form_subcomment.to_user_id(value=sub_user.id, type="hidden") }}
+                                                <div class="form-group has-error pb-2">
+                                                    {{ form_subcomment.text2(placeholder="Comment", class="form-control") }}
+                                                </div>
+                                                {% if form_subcomment.text2.errors %}
+                                                    {% for error in form_subcomment.text2.errors %}
+                                                    <span aria-hidden="true">{{ error }}</span><br>
+                                                    {% endfor %}
+                                                {% endif %}
+                                        
+                                                <div class="form-group text-center">
+                                                    {{ form_subcomment.submit2(class="btn btn-block btn-primary btn-lg") }}
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
 {% endblock %}
