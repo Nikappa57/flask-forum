@@ -149,4 +149,5 @@ cython_debug/
 #.idea/
 
 migrations/
+Site/static/thread-img
 database.db
