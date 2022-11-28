@@ -32,15 +32,17 @@ git clone https://github.com/Nikappa57/flask-forum
 ```
 
 Create the virtual environme,
-for example:
+
+For example:
 ```
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-and the environment variable `FLASK_APP`.
-for example:
+And the environment variable `FLASK_APP`.
+
+For example:
 ```console
 export FLASK_APP=run.py
 ```
