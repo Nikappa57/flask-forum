@@ -47,9 +47,9 @@ export FLASK_APP=run.py
 or save it in a file `.flaskenv`.
 
 
-Now create the `.env` file with the other environment variable
+Now create the `.env` file with the other environment variable.
 ```plaintext
-SECRET_KEY=mysecreat
+SECRET_KEY=mykey
 MAIL_USERNAME=mail@gmail.com
 MAIL_PASSWORD=mailpassw
 MAIL_DEFAULT_SENDER=mail@gmail.com
@@ -58,7 +58,7 @@ MAIL_DEFAULT_SENDER=mail@gmail.com
 #### Set up
 Now you just need to set the settings of your forum.
 
-Sets the ranks and their permissions as you prefer in `Site/src/permission_default.py` and `Site/src/rank_default.py`
+Sets the ranks and their permissions as you prefer in `Site/src/permission_default.py` and `Site/src/rank_default.py`.
 
 Prepare the database.
 ```
@@ -72,4 +72,4 @@ Now you should be ready to start your forum.
 flask run
 ```
  
-Have fun adding all the functions you want and create a good frontend (do not use mine because it sucks!)
+Have fun adding all the functions you want and create a good frontend (do not use mine because it sucks!).
