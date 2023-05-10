@@ -22,7 +22,7 @@ from Site.views.Forum.src.forms import (ThreadForm, CommentsForm,
 
 
 ### HOMEPAGE ###
-@app.route("/forum/")
+@app.route("/")
 def forumHomepage():
     categories = Category.query.order_by('position').all()
     
@@ -30,7 +30,7 @@ def forumHomepage():
 
 
 ### CATEGORY ###
-@app.route("/forum/category/create", methods=["GET", "POST"])
+@app.route("/category/create", methods=["GET", "POST"])
 @login_required
 @check_priority('create category')
 def forumCategoryCreate():
@@ -60,7 +60,7 @@ def forumCategoryCreate():
     return render_template('Forum/create_category.html', form=form)
 
 
-@app.route("/forum/category/<int:category_id>/edit", methods=["GET", "POST"])
+@app.route("/category/<int:category_id>/edit", methods=["GET", "POST"])
 @login_required
 @check_priority('edit category')
 def forumCategoryEdit(category_id:int):
@@ -90,7 +90,7 @@ def forumCategoryEdit(category_id:int):
     return render_template('Forum/create_category.html', form=form)
 
 
-@app.route("/forum/category/<int:category_id>/delete")
+@app.route("/category/<int:category_id>/delete")
 @login_required
 @check_priority('delete category')
 def forumCategoryDelete(category_id:int):
@@ -112,7 +112,7 @@ def forumCategoryDelete(category_id:int):
 
 
 ### SECTION ###
-@app.route("/forum/<string:section_slug>")
+@app.route("/<string:section_slug>")
 def forumSection(section_slug:str):
     page_number = request.args.get('page', 1, type=int)
     print(page_number)
@@ -124,7 +124,7 @@ def forumSection(section_slug:str):
     
     threads = Threads.query.filter_by(
         section_id=section.id, pinned=False).paginate(
-            page_number, 6, True)
+            page=page_number, per_page=6, error_out=True)
 
     pinned_threads = Threads.query.filter_by(
         section_id=section.id, pinned=True).all() if page_number == 1 else list()
@@ -146,7 +146,7 @@ def forumSection(section_slug:str):
         page=loadjson(page))
 
 
-@app.route("/forum/category/<int:category_id>/create", methods=["GET", "POST"])
+@app.route("/category/<int:category_id>/create", methods=["GET", "POST"])
 @login_required
 @check_priority('create section')
 def forumSectionCreate(category_id:int):
@@ -185,7 +185,7 @@ def forumSectionCreate(category_id:int):
     return render_template('Forum/create_section.html', form=form)
 
 
-@app.route("/forum/<string:section_slug>/edit", methods=["GET", "POST"])
+@app.route("/<string:section_slug>/edit", methods=["GET", "POST"])
 @login_required
 @check_priority('edit section')
 def forumSectionEdit(section_slug:str):
@@ -222,7 +222,7 @@ def forumSectionEdit(section_slug:str):
     return render_template('Forum/create_section.html', form=form)
 
 
-@app.route("/forum/<string:section_slug>/delete")
+@app.route("/<string:section_slug>/delete")
 @login_required
 @check_priority('delete section')
 def forumSectionDelete(section_slug:str):
@@ -246,7 +246,7 @@ def forumSectionDelete(section_slug:str):
 
 
 ### THREAD ###
-@app.route("/forum/thread/<string:thread_slug>/", methods=["GET", "POST"])
+@app.route("/thread/<string:thread_slug>/", methods=["GET", "POST"])
 def forumThread(thread_slug:str):
     thread = Threads.query.filter_by(slug=thread_slug).first_or_404()
     section = Section.query.get_or_404(thread.section_id)
@@ -287,7 +287,7 @@ def forumThread(thread_slug:str):
             form_subcomment=form_subcomment, user=user, Users=Users,)
 
 
-@app.route("/forum/thread/<string:section_slug>/create", methods=["GET", "POST"])
+@app.route("/thread/<string:section_slug>/create", methods=["GET", "POST"])
 @login_required
 @check_priority('create thread')
 def forumCreateThread(section_slug:str):
@@ -329,7 +329,7 @@ def forumCreateThread(section_slug:str):
     return render_template("Forum/create_thread.html", form=form, section_id=section.id)
 
 
-@app.route("/forum/thread/<string:thread_slug>/edit", methods=["GET", "POST"])
+@app.route("/thread/<string:thread_slug>/edit", methods=["GET", "POST"])
 @login_required
 def forumEditThread(thread_slug:str):
     form = ThreadForm()
@@ -365,7 +365,7 @@ def forumEditThread(thread_slug:str):
     return render_template("Forum/create_thread.html", form=form)
 
 
-@app.route("/forum/thread/<int:thread_id>/delete")
+@app.route("/thread/<int:thread_id>/delete")
 @login_required
 def forumDeleteThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
@@ -379,7 +379,7 @@ def forumDeleteThread(thread_id:int):
     return redirect(url_for('forumSection', section_id=section_id))
 
 
-@app.route("/forum/thread/<int:thread_id>/pin")
+@app.route("/thread/<int:thread_id>/pin")
 @login_required
 def forumPinThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
@@ -392,7 +392,7 @@ def forumPinThread(thread_id:int):
     return redirect(url_for('forumThread', thread_slug=thread.slug))
 
 
-@app.route("/forum/thread/<int:thread_id>/open")
+@app.route("/thread/<int:thread_id>/open")
 @login_required
 def forumOpenThread(thread_id:int):
     thread = Threads.query.get_or_404(thread_id)
@@ -405,7 +405,7 @@ def forumOpenThread(thread_id:int):
     return redirect(url_for('forumThread', thread_slug=thread.slug))
 
 
-@app.route("/forum/thread/<int:thread_id>/delete-comment/<int:comment_id>")
+@app.route("/thread/<int:thread_id>/delete-comment/<int:comment_id>")
 @login_required
 def forumDeleteComment(thread_id:int, comment_id:int):
     thread = Threads.query.get_or_404(thread_id)
@@ -417,7 +417,7 @@ def forumDeleteComment(thread_id:int, comment_id:int):
 
     return redirect(url_for('forumThread', thread_slug=thread.slug))
 
-@app.route("/forum/thread/<int:thread_id>/delete-subcomment/<int:subcomment_id>")
+@app.route("/thread/<int:thread_id>/delete-subcomment/<int:subcomment_id>")
 @login_required
 def forumDeleteSubComment(thread_id:int, subcomment_id:int):
     thread = Threads.query.get_or_404(thread_id)
@@ -430,7 +430,7 @@ def forumDeleteSubComment(thread_id:int, subcomment_id:int):
     return redirect(url_for('forumThread', thread_slug=thread.slug))
 
 
-@app.route("/forum/thread/<int:thread_id>/upvote/<int:comment_id>")
+@app.route("/thread/<int:thread_id>/upvote/<int:comment_id>")
 @login_required
 def forumCommentUpVote(thread_id:int, comment_id:int):
     thread = Threads.query.get_or_404(thread_id)
@@ -448,7 +448,7 @@ def forumCommentUpVote(thread_id:int, comment_id:int):
 
     return redirect(url_for('forumThread', thread_slug=thread.slug))
 
-@app.route("/forum/thread/<int:thread_id>/sub-upvote/<int:subcomment_id>")
+@app.route("/thread/<int:thread_id>/sub-upvote/<int:subcomment_id>")
 @login_required
 def forumSubCommentUpVote(thread_id:int, subcomment_id:int):
     thread = Threads.query.get_or_404(thread_id)

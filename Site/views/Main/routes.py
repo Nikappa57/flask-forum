@@ -9,11 +9,6 @@ from Site.views.Main.src.messages import Error, Success
 from Site.src.linkaccount import LinkAccount
 from Site.src.email import send_email
 
-@app.route("/")
-def homepage():
-    return redirect(url_for("forumHomepage"))
-    # return render_template("homepage.html")
-
 @app.route("/login/", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
