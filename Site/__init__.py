@@ -46,6 +46,8 @@ with app.app_context():
     from Site.models.sub_upvote import SubUpvote
     from Site.models.subcomment import Subcomments
     if not "db" in sys.argv[1]:
+        from Site.src.permission_default import create_default_permission
+        from Site.src.rank_default import create_default_ranks
         create_default_permission()
         create_default_ranks()
         from Site.views.Admin import routes
@@ -53,5 +55,3 @@ with app.app_context():
         from Site.views.Forum import routes
         from Site.views.Errors import routes
         from Site.views.Other import routes
-        from Site.src.permission_default import create_default_permission
-        from Site.src.rank_default import create_default_ranks
