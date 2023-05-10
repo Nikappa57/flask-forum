@@ -119,7 +119,7 @@ def forumSection(section_slug:str):
     section = Section.query.filter_by(
         slug=section_slug).first_or_404()
     
-    if current_user.priority < section.priority_required:
+    if not section.to_show(current_user):
         return abort(401)
     
     threads = Threads.query.filter_by(

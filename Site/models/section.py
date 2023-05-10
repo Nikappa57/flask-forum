@@ -22,6 +22,11 @@ class Section(db.Model):
         self.slug = "{}-{}".format(utilis.slugify(self.name), 
             utilis.generate_random_string())
 
+    def to_show(self, user) -> bool:
+        if (user.is_authenticated and user.rank.priority >= self.priority_required):
+            return True
+        return self.priority_required == 0
+
     @property
     def last_post(self):
         return self.threads[-1] if self.threads else None

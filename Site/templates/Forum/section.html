@@ -93,7 +93,7 @@
     </ul>
 </nav>
 
-{% if current_user.priority >= section.priority_required_create %}
+{% if current_user.is_authenticated and current_user.priority >= section.priority_required_create %}
   <a href="{{ url_for('forumCreateThread', section_slug=section.slug) }}" class="btn btn-success">create thread</a>
 {% endif %}
 
