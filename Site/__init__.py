@@ -45,6 +45,7 @@ with app.app_context():
     from Site.models.comment import Comments
     from Site.models.sub_upvote import SubUpvote
     from Site.models.subcomment import Subcomments
+    db.create_all()
     if not "db" in sys.argv[1]:
         from Site.src.permission_default import create_default_permission
         from Site.src.rank_default import create_default_ranks
